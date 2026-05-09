@@ -1,0 +1,102 @@
+{
+  "name": "auris",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Auris — assistente em tempo real que escuta junto com você.",
+  "author": "Auris",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck": "tsc --noEmit",
+    "build:icons": "node scripts/build-icons.mjs",
+    "package:sidecar": "node scripts/build-sidecar.mjs",
+    "package:app": "electron-vite build && electron-builder",
+    "package:dir": "electron-vite build && electron-builder --dir",
+    "package": "npm run package:sidecar && npm run package:app"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.1",
+    "dotenv": "^17.4.2",
+    "groq-sdk": "^1.1.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@electron-toolkit/preload": "^3.0.1",
+    "@electron-toolkit/utils": "^3.0.0",
+    "@types/node": "^20.16.10",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.2",
+    "autoprefixer": "^10.4.20",
+    "electron": "^32.1.2",
+    "electron-builder": "^25.0.5",
+    "electron-vite": "^2.3.0",
+    "png-to-ico": "^3.0.1",
+    "postcss": "^8.4.47",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^3.4.13",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.8"
+  },
+  "build": {
+    "appId": "app.auris.desktop",
+    "productName": "Auris",
+    "copyright": "© 2026 Auris",
+    "directories": {
+      "output": "release",
+      "buildResources": "resources"
+    },
+    "files": [
+      "out/**/*",
+      "package.json",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/*.{spec,test,e2e}.{js,ts}",
+      "!**/.{nyc_output,coverage}",
+      "!**/{.DS_Store,.git,.gitignore,.gitattributes,.editorconfig}"
+    ],
+    "extraResources": [
+      {
+        "from": "python-sidecar/dist/auris_sidecar.exe",
+        "to": "auris_sidecar.exe"
+      },
+      {
+        "from": "resources/icon.ico",
+        "to": "icon.ico"
+      },
+      {
+        "from": "resources/icon.png",
+        "to": "icon.png"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "resources/icon.ico",
+      "artifactName": "Auris-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Auris",
+      "deleteAppDataOnUninstall": false,
+      "installerIcon": "resources/icon.ico",
+      "uninstallerIcon": "resources/icon.ico",
+      "installerHeaderIcon": "resources/icon.ico"
+    },
+    "publish": null
+  }
+}

@@ -1,0 +1,3 @@
+# Build-only deps. Install separately when packaging:
+#   .venv\Scripts\pip install -r requirements-build.txt
+pyinstaller==6.11.1

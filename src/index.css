@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    background: theme('colors.bg');
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    color: theme('colors.text');
+    font-family: theme('fontFamily.sans');
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* The popup window is transparent + frameless — its rounded panel is
+     rendered inside <PopupOverlay/>. */
+  html[data-window='popup'],
+  body[data-window='popup'],
+  body[data-window='popup'] #root {
+    background: transparent;
+  }
+
+  /* Selection color matches the warm accent. */
+  ::selection {
+    background: rgba(251, 191, 36, 0.28);
+    color: theme('colors.text');
+  }
+}
+
+@layer components {
+  /* Soft scrollbar for content panes. */
+  .auris-scroll::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .auris-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .auris-scroll::-webkit-scrollbar-thumb {
+    background: theme('colors.border');
+    border-radius: 2px;
+    transition: background-color 0.2s;
+  }
+  .auris-scroll::-webkit-scrollbar-thumb:hover {
+    background: theme('colors.muted');
+  }
+
+  /* Eyebrow label — small uppercase tracker used everywhere for section labels. */
+  .eyebrow {
+    font-family: theme('fontFamily.mono');
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: theme('letterSpacing.eyebrow');
+    color: theme('colors.faint');
+    font-weight: 400;
+  }
+  .eyebrow-accent {
+    color: theme('colors.accent.DEFAULT');
+    opacity: 0.85;
+  }
+
+  /* Glass surfaces — stacked rgba whites + blur for soft depth without borders. */
+  .glass {
+    background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01));
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+  }
+  .glass-strong {
+    background: linear-gradient(180deg, rgba(20,24,33,0.9), rgba(15,18,24,0.85));
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+  }
+
+  /* Soft elevated card surface used inside the main overlay. */
+  .panel {
+    background: linear-gradient(180deg, rgba(255,255,255,0.022), rgba(255,255,255,0.005));
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.04) inset,
+      0 0 0 1px rgba(255,255,255,0.04);
+    border-radius: 12px;
+  }
+
+  /* Streaming text baseline + caret styling. */
+  .stream-caret::after {
+    content: '';
+    display: inline-block;
+    width: 1px;
+    height: 0.95em;
+    margin-left: 2px;
+    transform: translateY(2px);
+    background: currentColor;
+    animation: caret-blink 1.1s ease-in-out infinite;
+  }
+}
+
+@layer utilities {
+  /* Drag region helpers — Electron uses -webkit-app-region for frameless windows. */
+  .drag    { -webkit-app-region: drag; }
+  .no-drag { -webkit-app-region: no-drag; }
+}

@@ -1,0 +1,25 @@
+name = "auris-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+
+# KV namespace for per-user daily rate limits.
+# Create the namespace once with:
+#   npx wrangler kv namespace create AURIS_RATELIMIT
+# Wrangler prints an `id`; paste it below and commit. For local `wrangler
+# dev`, the binding is auto-emulated in-memory and persists across reloads
+# in `.wrangler/state/`.
+[[kv_namespaces]]
+binding = "AURIS_RATELIMIT"
+id = "04e814d6b7a940119e39bb0408d19d6c"
+
+# Secrets are NOT defined here — they're set via:
+#   wrangler secret put GROQ_API_KEY
+#   wrangler secret put SUPABASE_URL
+#   wrangler secret put SUPABASE_JWT_SECRET
+#   wrangler secret put AURIS_DEV_TOKEN   # optional dev backdoor
+#
+# For local `wrangler dev`, copy `.dev.vars.example` to `.dev.vars`.

@@ -1,0 +1,9 @@
+# Runtime deps used by the sidecar.
+soundcard==0.4.3
+numpy==1.26.4
+webrtcvad-wheels==2.0.14
+requests==2.32.3
+
+# Local Whisper backend (dev only — production builds exclude it via the
+# PyInstaller spec since we route through Groq hosted Whisper).
+faster-whisper==1.0.3

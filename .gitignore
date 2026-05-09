@@ -1,0 +1,20 @@
+node_modules/
+out/
+dist/
+release/
+.vite/
+*.log
+.DS_Store
+
+# Local secrets — never commit
+.env
+.env.local
+.env.*.local
+.env.production
+
+python-sidecar/.venv/
+python-sidecar/__pycache__/
+python-sidecar/build/
+python-sidecar/dist/
+
+RELEASE.md
