@@ -2,26 +2,38 @@
  * Resolve the latest Auris release URL from GitHub and point the download
  * buttons at it. Falls back to the GitHub Releases page when the API rate
  * limits or no release exists yet.
- *
- * Edit GITHUB_REPO once you have a public repo; until then the buttons
- * link to the placeholder.
  */
-const GITHUB_REPO = ''; // e.g. "yourname/auris" — leave empty for placeholder
+const GITHUB_REPO = 'Allisonfreittass/AURIS';
 
 const buttons = document.querySelectorAll('a[href="#download-link"]');
 
+/**
+ * Fetch the most recent release (including pre-releases). The official
+ * `/releases/latest` endpoint excludes pre-releases, so we use the listing
+ * endpoint instead and take the first item — GitHub returns them in
+ * created_at desc order by default.
+ */
 async function resolveLatestUrl() {
   if (!GITHUB_REPO) return null;
   try {
-    const resp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
-      headers: { Accept: 'application/vnd.github+json' },
-    });
-    if (!resp.ok) return null;
-    const data = await resp.json();
-    const asset = (data.assets || []).find((a) =>
-      /Auris-Setup.*\.exe$/i.test(a.name),
+    const resp = await fetch(
+      `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`,
+      { headers: { Accept: 'application/vnd.github+json' } },
     );
-    return asset?.browser_download_url ?? data.html_url ?? null;
+    if (!resp.ok) return null;
+    const releases = await resp.json();
+    if (!Array.isArray(releases) || releases.length === 0) return null;
+
+    // Prefer the first release with a Windows installer asset.
+    for (const r of releases) {
+      const asset = (r.assets || []).find((a) =>
+        /Auris-Setup.*\.exe$/i.test(a.name),
+      );
+      if (asset) return asset.browser_download_url;
+    }
+
+    // No matching asset — link to the release page itself.
+    return releases[0].html_url ?? null;
   } catch {
     return null;
   }

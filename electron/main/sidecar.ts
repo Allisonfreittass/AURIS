@@ -166,6 +166,9 @@ export class SidecarSupervisor {
           text: String(msg.text ?? ''),
           final: Boolean(msg.final),
           ts: Number(msg.ts ?? Date.now() / 1000),
+          // Whisper auto-detect emits an ISO 639-1 code here. Without
+          // forwarding it, main process can't decide whether to translate.
+          lang: typeof msg.lang === 'string' ? msg.lang : undefined,
         });
         break;
       case 'error':

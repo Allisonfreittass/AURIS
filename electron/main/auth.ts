@@ -17,7 +17,7 @@
 import { app, safeStorage } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
-import { PROD_SUPABASE_ANON_KEY, PROD_SUPABASE_URL } from './productionConfig';
+import { PROD_PROXY_URL, PROD_SUPABASE_ANON_KEY, PROD_SUPABASE_URL } from './productionConfig';
 
 const SESSION_FILE = 'auris.session';
 
@@ -38,7 +38,26 @@ export interface UserProfile {
   email: string;
   full_name: string | null;
   plan: PlanTier;
+  user_context: string | null;
   created_at: string;
+}
+
+export interface QuotaInfo {
+  plan: PlanTier;
+  used: number;
+  limit: number;
+  remaining: number;
+  reset_at: number;
+}
+
+function proxyUrl(): string | null {
+  if (app.isPackaged) {
+    return PROD_PROXY_URL && PROD_PROXY_URL.trim().length > 0
+      ? PROD_PROXY_URL.trim()
+      : null;
+  }
+  const v = process.env.AURIS_PROXY_URL?.trim();
+  return v && v.length > 0 ? v : null;
 }
 
 export type AuthErrorCode =
@@ -254,13 +273,21 @@ async function refreshSession(session: Session): Promise<Session> {
 }
 
 /**
- * Lightweight server-side validation: ask Supabase if the access token
- * still maps to an existing user. Catches the "account deleted server-side
+ * Server-side session validation. Catches the "account deleted server-side
  * while we still have a valid-looking JWT in safeStorage" case so we can
- * force-logout proactively instead of waiting for token expiry (~1h).
+ * force-logout proactively instead of waiting for the JWT to expire (~1h).
  *
- * Returns true on success, false on 401/404/network — caller treats falsy
- * as "session is dead, clear it".
+ * Why we hit `/rest/v1/profiles` and NOT `/auth/v1/user`:
+ *   /auth/v1/user only verifies the JWT signature — it returns 200 with
+ *   data derived from the token itself even if the underlying user has
+ *   been deleted from the database. /rest/v1/profiles, by contrast, hits
+ *   the actual table; if the user row is gone (and `on delete cascade`
+ *   removed their profile), the response is an empty array and we know
+ *   the session is dead.
+ *
+ * Returns false on 401/403 or empty result; true on 200 with row OR on
+ * network error (don't punish the user when offline) OR on 404 (profiles
+ * table doesn't exist yet — first-time setup).
  */
 export async function validateSession(): Promise<boolean> {
   const cfg = supabaseConfig();
@@ -269,18 +296,31 @@ export async function validateSession(): Promise<boolean> {
   if (!session) return false;
 
   try {
-    const resp = await fetch(`${cfg.url}/auth/v1/user`, {
+    const url = `${cfg.url}/rest/v1/profiles?select=id&limit=1`;
+    const resp = await fetch(url, {
       headers: {
         apikey: cfg.anonKey,
         Authorization: `Bearer ${session.access_token}`,
+        Accept: 'application/json',
       },
     });
-    if (resp.status === 401 || resp.status === 403 || resp.status === 404) {
-      return false;
+
+    // Hard-rejected: token bad or revoked.
+    if (resp.status === 401 || resp.status === 403) return false;
+
+    // Profiles table missing (e.g., setup SQL hasn't been run) — don't
+    // invalidate the session over that, just trust the JWT and move on.
+    if (resp.status === 404) return true;
+
+    if (resp.ok) {
+      const rows = (await resp.json()) as unknown[];
+      // RLS filters to the caller's own row. If it's empty, the row is
+      // gone → user was deleted (cascade ran on delete from auth.users).
+      return Array.isArray(rows) && rows.length > 0;
     }
-    return resp.ok;
+
+    return false;
   } catch (err) {
-    // Network failure ≠ invalid session — don't punish the user when offline.
     console.warn('[auth] validateSession network error (treating as valid):', err);
     return true;
   }
@@ -320,23 +360,111 @@ export async function getProfile(): Promise<UserProfile | null> {
   const token = await getValidAccessToken();
   if (!token) return null;
 
-  const url = `${cfg.url}/rest/v1/profiles?select=id,email,full_name,plan,created_at&limit=1`;
-  try {
-    const resp = await fetch(url, {
-      headers: {
-        apikey: cfg.anonKey,
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    });
+  // Try with user_context (added in a later migration). If the column
+  // doesn't exist yet on this project's DB, Supabase returns 400 and we
+  // retry without — the user just won't have the "Sobre você" feature
+  // until they run the migration. Crucially, we DON'T fail the whole
+  // profile load over that, otherwise AccountScreen mistakes it for a
+  // deleted account.
+  const headers = {
+    apikey: cfg.anonKey,
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/json',
+  };
+  const baseSelect = 'id,email,full_name,plan,created_at';
+
+  async function tryFetch(extraColumns: string[]): Promise<UserProfile | null> {
+    const cols = [baseSelect, ...extraColumns].filter(Boolean).join(',');
+    const url = `${cfg!.url}/rest/v1/profiles?select=${cols}&limit=1`;
+    const resp = await fetch(url, { headers });
     if (!resp.ok) {
-      console.warn(`[auth] profile fetch returned ${resp.status}`);
-      return null;
+      const body = await resp.text().catch(() => '');
+      throw Object.assign(new Error(`profiles fetch ${resp.status}: ${body.slice(0, 120)}`), {
+        status: resp.status,
+        body,
+      });
     }
     const rows = (await resp.json()) as UserProfile[];
     return rows[0] ?? null;
+  }
+
+  try {
+    return await tryFetch(['user_context']);
   } catch (err) {
+    const e = err as { status?: number; body?: string };
+    // 400 + "user_context" → column missing. Retry without it.
+    if (e.status === 400 && (e.body ?? '').includes('user_context')) {
+      console.warn('[auth] user_context column missing — retrying profile fetch without it');
+      try {
+        return await tryFetch([]);
+      } catch (err2) {
+        console.warn('[auth] profile retry failed:', err2);
+        return null;
+      }
+    }
     console.warn('[auth] profile fetch failed:', err);
+    return null;
+  }
+}
+
+/**
+ * PATCH the user's profile row to update `user_context`. RLS allows the
+ * caller to update only their own row (auth.uid() = id), so we don't need
+ * to specify a where clause in the URL — Supabase scopes it automatically.
+ */
+export async function updateUserContext(
+  context: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  const cfg = supabaseConfig();
+  if (!cfg) return { ok: false, error: 'Supabase não configurado.' };
+  const token = await getValidAccessToken();
+  if (!token) return { ok: false, error: 'Sessão expirada.' };
+
+  const session = loadSession();
+  if (!session) return { ok: false, error: 'Sessão não encontrada.' };
+
+  const url = `${cfg.url}/rest/v1/profiles?id=eq.${encodeURIComponent(session.user.id)}`;
+  try {
+    const resp = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        apikey: cfg.anonKey,
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify({ user_context: context }),
+    });
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => '');
+      return { ok: false, error: `HTTP ${resp.status}: ${text.slice(0, 160)}` };
+    }
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+}
+
+/**
+ * Read the user's daily quota from the proxy's `/quota` endpoint. Used by
+ * AccountScreen to show a usage bar. Returns null when there's no proxy
+ * configured (dev mode without proxy) or no valid session.
+ */
+export async function getQuota(): Promise<QuotaInfo | null> {
+  const url = proxyUrl();
+  if (!url) return null;
+  const token = await getValidAccessToken();
+  if (!token) return null;
+
+  try {
+    const resp = await fetch(`${url.replace(/\/$/, '')}/quota`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) return null;
+    const data = (await resp.json()) as QuotaInfo;
+    return data;
+  } catch (err) {
+    console.warn('[auth] getQuota failed:', err);
     return null;
   }
 }

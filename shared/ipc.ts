@@ -12,6 +12,11 @@ export interface TranscriptEvent {
   text: string;
   final: boolean;
   ts: number;
+  /** ISO-639-1 code detected by Whisper for this segment (e.g. 'pt', 'en'). */
+  lang?: string;
+  /** True when `text` is a translation; `original_text` holds the source. */
+  translated?: boolean;
+  original_text?: string;
 }
 
 export interface SuggestionDelta {
@@ -37,6 +42,11 @@ export type AuthState = 'authed' | 'needs-login' | 'needs-key';
  */
 export type AurisMode = 'manual' | 'auto';
 
+/** Possible visual states of the floating popup overlay. The popup window
+ *  resizes itself based on this state — `idle` is just a 72×72 icon, while
+ *  the active states grow to fit transcription and response cards. */
+export type PopupShape = 'idle' | 'compact' | 'expanded';
+
 export interface DetectedQuestionEvent {
   text: string;
   ts: number;
@@ -54,7 +64,16 @@ export interface UserProfile {
   email: string;
   full_name: string | null;
   plan: PlanTier;
+  user_context: string | null;
   created_at: string;
+}
+
+export interface QuotaInfo {
+  plan: PlanTier;
+  used: number;
+  limit: number;
+  remaining: number;
+  reset_at: number;
 }
 
 export type AuthOpResult =
@@ -68,6 +87,7 @@ export interface AurisApi {
   minimize: () => Promise<void>;        // standard minimize — stays in taskbar
   minimizeToTray: () => Promise<void>;  // close-to-tray — disappears from taskbar
   showMainWindow: () => Promise<void>;  // restore + focus the main overlay (used by popup)
+  setPopupShape: (shape: PopupShape) => Promise<void>;  // popup self-resizes by reporting its state
 
   // Auth (Supabase)
   authState: () => Promise<AuthState>;
@@ -77,11 +97,31 @@ export interface AurisApi {
   signOut: () => Promise<void>;
   currentUser: () => Promise<UserInfo | null>;
   getProfile: () => Promise<UserProfile | null>;
+  getQuota: () => Promise<QuotaInfo | null>;
+  /** Update the user's free-text context (profession, focus, etc.).
+   *  Auris injects this into every ask so responses adapt. Pass null to
+   *  clear the field. */
+  updateUserContext: (context: string | null) => Promise<{ ok: boolean; error?: string }>;
+  /** Get/set the user's preferred display language (ISO 639-1). When the
+   *  detected audio language differs, finals are auto-translated before
+   *  the renderer sees them. Stored in main process memory + persisted to
+   *  the OS user settings. */
+  getPreferredLang: () => Promise<string>;
+  setPreferredLang: (lang: string) => Promise<void>;
 
   // Ask Auris a question. Main process uses the rolling transcript buffer as
   // context and streams the response back via `onSuggestion`.
   ask: (question: string) => Promise<void>;
   cancelAsk: () => Promise<void>;
+  /** Clear the rolling transcript context (`finals[]` in ClaudeStreamer)
+   *  and abort any in-flight LLM stream. Used by the "Limpar conversa"
+   *  action so the next question starts from a blank slate. */
+  clearContext: () => Promise<void>;
+
+  /** Save Markdown content as a session file under
+   *  `Documents/Auris/sessions/`, then reveal it in the OS file manager.
+   *  Returns the absolute path or null on failure. */
+  saveSession: (content: string) => Promise<string | null>;
 
   // Mode control — manual (user-driven) or auto (question-detection).
   getMode: () => Promise<AurisMode>;

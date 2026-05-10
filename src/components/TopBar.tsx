@@ -1,4 +1,5 @@
 import { AurisIconMark } from './logo/AurisIconMark';
+import { ContextIndicator } from './ContextIndicator';
 import { WindowControls } from './WindowControls';
 import { ModeToggle } from './ModeToggle';
 import type { AurisMode, StatusKind } from '../../shared/ipc';
@@ -12,6 +13,7 @@ interface Props {
   onCloseAccount: () => void;
   mode: AurisMode;
   onModeChange: (mode: AurisMode) => void;
+  contextCount: number;
 }
 
 export function TopBar({
@@ -22,6 +24,7 @@ export function TopBar({
   onCloseAccount,
   mode,
   onModeChange,
+  contextCount,
 }: Props) {
   const isAccount = view === 'account';
 
@@ -59,6 +62,7 @@ export function TopBar({
       <div className="no-drag flex items-center gap-1.5">
         {!isAccount && (
           <>
+            <ContextIndicator count={contextCount} />
             <ModeToggle mode={mode} onChange={onModeChange} variant="topbar" />
             <button
               onClick={onToggleRun}

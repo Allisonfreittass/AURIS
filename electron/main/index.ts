@@ -2,19 +2,27 @@ import { app, BrowserWindow, session } from 'electron';
 import path from 'node:path';
 import { config as loadDotenv } from 'dotenv';
 import { createOverlayWindow } from './window';
-import { createPopupWindow } from './popupWindow';
+import { createPopupWindow, setPopupShape } from './popupWindow';
 import { registerIpcHandlers } from './ipc';
 import { SidecarSupervisor } from './sidecar';
 import { ClaudeStreamer } from './claude';
 import { createTray } from './tray';
+import { setupAutoUpdater } from './updater';
 import * as secrets from './secrets';
-import type { AurisMode, StatusKind } from '../../shared/ipc';
+import { translateText } from './translate';
+import type { AurisMode, StatusKind, TranscriptEvent } from '../../shared/ipc';
 
 // Load .env from project root in dev only. Production builds never ship a
 // .env file — the key comes from safeStorage (per-user, encrypted) or, when
 // the proxy backend lands, from a server URL + license token.
 if (!app.isPackaged) {
   loadDotenv({ path: path.resolve(__dirname, '..', '..', '.env') });
+
+  // Use a separate userData directory in dev so we don't fight the
+  // installed production app (`%APPDATA%/Auris/`) for cache locks. On
+  // Windows the filesystem is case-insensitive, so the default
+  // `app.getName()`-based path collides with the productName-based one.
+  app.setPath('userData', path.join(app.getPath('appData'), 'auris-dev'));
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -30,6 +38,19 @@ let lastAutoFireAt = 0;
 let lastAutoText = '';
 const AUTO_COOLDOWN_MS = 1500; // dedupe partials of same sentence
 const AUTO_MIN_INTERVAL_MS = 800; // throttle bursts of detections
+
+// Preferred display language for transcripts. Finals in any other detected
+// language get translated via Groq before reaching the renderer. Default
+// 'pt' (Brazilian Portuguese).
+let preferredLang = 'pt';
+
+// Debounced partial translation: when audio quiets and a partial has been
+// sitting unchanged, translate it so the user doesn't stare at English
+// until the segment finalizes (which can take seconds with our 500ms
+// silence threshold + audio fade-outs).
+let pendingPartial: TranscriptEvent | null = null;
+let pendingPartialTimer: NodeJS.Timeout | null = null;
+const PARTIAL_TRANSLATE_DEBOUNCE_MS = 1500;
 
 /** Send an event to every live renderer (main overlay + popup). */
 function send<T>(channel: string, payload: T) {
@@ -92,6 +113,122 @@ function looksLikeQuestion(text: string): boolean {
   return starters.some((s) => lower.startsWith(s));
 }
 
+/**
+ * If the transcribed final is in a foreign language, translate it via the
+ * proxy and emit a SECOND `auris:transcript` event with the translation.
+ * The renderer matches by ts to upgrade the originally-displayed text.
+ *
+ * Best-effort: failures are logged and silently dropped (the user keeps
+ * seeing the original). Stays out of the hot path — runs async after we
+ * already shipped the original transcript to the UI.
+ */
+async function maybeTranslateFinal(e: TranscriptEvent): Promise<void> {
+  if (!e.lang) {
+    console.log(`[i18n] skip — no lang detected: "${e.text.slice(0, 40)}"`);
+    return;
+  }
+  // Whisper auto-detect returns full names ("english", "portuguese") OR
+  // ISO codes depending on backend; normalize to a 2-letter code.
+  const fromCode = normalizeLangCode(e.lang);
+  if (fromCode === preferredLang) {
+    console.log(`[i18n] skip — already in ${preferredLang} (got ${e.lang})`);
+    return;
+  }
+  if (!e.text.trim()) {
+    console.log('[i18n] skip — empty text');
+    return;
+  }
+
+  const auth = await secrets.loadAuth();
+  if (!auth) {
+    console.warn('[i18n] skip — no auth available');
+    return;
+  }
+
+  console.log(`[i18n] translating ${fromCode} → ${preferredLang}: "${e.text.slice(0, 60)}"`);
+  try {
+    const translated = await translateText(e.text, preferredLang, auth);
+    if (!translated || translated === e.text) {
+      console.warn('[i18n] empty / unchanged translation; dropping');
+      return;
+    }
+    console.log(`[i18n] ✓ "${translated.slice(0, 60)}"`);
+    send('auris:transcript', {
+      text: translated,
+      final: e.final,
+      ts: e.ts,
+      lang: fromCode,
+      translated: true,
+      original_text: e.text,
+    } satisfies TranscriptEvent);
+  } catch (err) {
+    console.warn(`[i18n] failed (${fromCode}→${preferredLang}):`, (err as Error).message ?? err);
+  }
+}
+
+/**
+ * Translate the partial after a quiet period (no fresh partial events
+ * for PARTIAL_TRANSLATE_DEBOUNCE_MS). Cancelled when a new partial
+ * arrives or the segment finalizes — only the "settled" partial actually
+ * fires the API call, so we don't burn quota on text that's about to
+ * change.
+ */
+function schedulePartialTranslation(e: TranscriptEvent): void {
+  if (!e.lang || !e.text.trim()) return;
+  const fromCode = normalizeLangCode(e.lang);
+  if (fromCode === preferredLang) return;
+
+  pendingPartial = e;
+  if (pendingPartialTimer) clearTimeout(pendingPartialTimer);
+  pendingPartialTimer = setTimeout(async () => {
+    const target = pendingPartial;
+    pendingPartial = null;
+    pendingPartialTimer = null;
+    if (!target) return;
+
+    const auth = await secrets.loadAuth();
+    if (!auth) return;
+    try {
+      const translated = await translateText(target.text, preferredLang, auth);
+      if (!translated || translated === target.text) return;
+      send('auris:transcript', {
+        text: translated,
+        final: false, // still a partial — replaces the live ribbon
+        ts: target.ts,
+        lang: fromCode,
+        translated: true,
+        original_text: target.text,
+      } satisfies TranscriptEvent);
+    } catch (err) {
+      console.warn(
+        `[i18n partial] failed (${fromCode}→${preferredLang}):`,
+        (err as Error).message ?? err,
+      );
+    }
+  }, PARTIAL_TRANSLATE_DEBOUNCE_MS);
+}
+
+function cancelPendingPartialTranslation(): void {
+  if (pendingPartialTimer) {
+    clearTimeout(pendingPartialTimer);
+    pendingPartialTimer = null;
+  }
+  pendingPartial = null;
+}
+
+/** Whisper sometimes returns "english" / "portuguese" instead of ISO codes.
+ *  Normalize to a 2-letter code so comparisons against `preferredLang` work. */
+function normalizeLangCode(raw: string): string {
+  const lower = raw.toLowerCase().trim();
+  if (lower.length <= 3) return lower; // already a code
+  const map: Record<string, string> = {
+    english: 'en', portuguese: 'pt', spanish: 'es', french: 'fr',
+    italian: 'it', german: 'de', dutch: 'nl', russian: 'ru',
+    japanese: 'ja', chinese: 'zh', korean: 'ko', arabic: 'ar',
+  };
+  return map[lower] ?? lower.slice(0, 2);
+}
+
 /** Decide whether a freshly-detected question should fire the LLM. */
 function shouldFireAuto(text: string): boolean {
   const now = Date.now();
@@ -143,21 +280,41 @@ async function startSession() {
       onTranscript: (e) => {
         const tag = e.final ? 'FINAL' : 'partial';
         const preview = e.text.length > 80 ? e.text.slice(0, 80) + '…' : e.text;
-        console.log(`[main] transcript ${tag}: ${preview}`);
+        console.log(`[main] transcript ${tag} [${e.lang ?? '??'}]: ${preview}`);
+        // Send the original immediately so the UI doesn't lag waiting for
+        // a translation round-trip. If a translation lands later, we send
+        // a follow-up event with `translated: true` so the renderer can
+        // upgrade the displayed text.
         send('auris:transcript', e);
 
-        if (e.final && claude) {
-          // Always buffer into LLM context (used by both manual and auto).
-          claude.pushFinal(e.text);
+        if (e.final) {
+          // A new final arrived — drop any partial we were about to translate;
+          // the final supersedes it and gets the full translation pass below.
+          cancelPendingPartialTranslation();
 
-          // Auto mode: detect questions in the audio and proactively answer.
-          if (currentMode === 'auto' && looksLikeQuestion(e.text) && shouldFireAuto(e.text)) {
-            console.log(`[main] auto-detected question: ${preview}`);
-            lastAutoFireAt = Date.now();
-            lastAutoText = e.text.trim();
-            send('auris:detected-question', { text: e.text, ts: e.ts });
-            void claude.askFromAudio(e.text);
+          if (claude) {
+            // Translate finals in a foreign language so the user always sees
+            // them in the preferred language.
+            maybeTranslateFinal(e);
+
+            // Always buffer into LLM context (used by both manual and auto).
+            claude.pushFinal(e.text);
+
+            if (currentMode === 'auto' && looksLikeQuestion(e.text) && shouldFireAuto(e.text)) {
+              console.log(`[main] auto-detected question: ${preview}`);
+              lastAutoFireAt = Date.now();
+              lastAutoText = e.text.trim();
+              send('auris:detected-question', { text: e.text, ts: e.ts });
+              void claude.askFromAudio(e.text);
+            }
           }
+        } else {
+          // Partial: schedule a debounced translation. If audio keeps coming,
+          // each new partial resets the timer so we only translate the
+          // *settled* text. This fixes the "last sentence stays in English"
+          // gap that happens when the speaker pauses mid-thought and Whisper
+          // doesn't fire a final for several seconds.
+          schedulePartialTranslation(e);
         }
       },
       onError: (e) => {
@@ -302,6 +459,9 @@ app.whenReady().then(() => {
     minimize: () => mainWindow?.minimize(),
     minimizeToTray: () => mainWindow?.hide(),
     showMainWindow: showWindow,
+    setPopupShape: (shape) => {
+      if (popupWindow) setPopupShape(popupWindow, shape);
+    },
     isRunning: () => isRunning,
     resetLlmClient: () => {
       claude?.reset();
@@ -320,18 +480,33 @@ app.whenReady().then(() => {
       claude?.cancelInflight();
       if (isRunning) status('listening');
     },
+    clearContext: () => {
+      // Abort any in-flight stream + drop the rolling transcript buffer.
+      // Auto-mode dedupe state is also reset so the very next detected
+      // question fires fresh instead of being dropped as "duplicate".
+      claude?.reset();
+      lastAutoFireAt = 0;
+      lastAutoText = '';
+      console.log('[main] context cleared');
+    },
     getMode: () => currentMode,
     setMode: (mode) => {
       currentMode = mode;
-      // Reset auto-mode dedupe state when switching to avoid stale fires.
       lastAutoFireAt = 0;
       lastAutoText = '';
       console.log(`[main] mode → ${mode}`);
+    },
+    getPreferredLang: () => preferredLang,
+    setPreferredLang: (lang) => {
+      preferredLang = lang;
+      console.log(`[main] preferred language → ${lang}`);
     },
   });
 
   mainWindow = createOverlayWindow();
   popupWindow = createPopupWindow();
+
+  setupAutoUpdater(() => mainWindow);
 
   // Whenever main window changes visibility state, decide if popup should appear.
   mainWindow.on('minimize', refreshPopupVisibility);

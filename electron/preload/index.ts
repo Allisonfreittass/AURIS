@@ -6,9 +6,11 @@ import type {
   AuthOpResult,
   AuthState,
   DetectedQuestionEvent,
+  PopupShape,
   StatusEvent,
   SuggestionDelta,
   TranscriptEvent,
+  QuotaInfo,
   UserInfo,
   UserProfile,
 } from '../../shared/ipc';
@@ -25,9 +27,13 @@ const api: AurisApi = {
   minimize: () => ipcRenderer.invoke('auris:minimize'),
   minimizeToTray: () => ipcRenderer.invoke('auris:minimizeToTray'),
   showMainWindow: () => ipcRenderer.invoke('auris:showMainWindow'),
+  setPopupShape: (shape: PopupShape) => ipcRenderer.invoke('auris:setPopupShape', shape),
 
   ask: (question: string) => ipcRenderer.invoke('auris:ask', question),
   cancelAsk: () => ipcRenderer.invoke('auris:cancelAsk'),
+  clearContext: () => ipcRenderer.invoke('auris:clearContext'),
+  saveSession: (content: string) =>
+    ipcRenderer.invoke('auris:saveSession', content) as Promise<string | null>,
 
   getMode: () => ipcRenderer.invoke('auris:getMode') as Promise<AurisMode>,
   setMode: (mode: AurisMode) => ipcRenderer.invoke('auris:setMode', mode),
@@ -41,6 +47,11 @@ const api: AurisApi = {
   signOut: () => ipcRenderer.invoke('auris:signOut'),
   currentUser: () => ipcRenderer.invoke('auris:currentUser') as Promise<UserInfo | null>,
   getProfile: () => ipcRenderer.invoke('auris:getProfile') as Promise<UserProfile | null>,
+  getQuota: () => ipcRenderer.invoke('auris:getQuota') as Promise<QuotaInfo | null>,
+  updateUserContext: (context: string | null) =>
+    ipcRenderer.invoke('auris:updateUserContext', context) as Promise<{ ok: boolean; error?: string }>,
+  getPreferredLang: () => ipcRenderer.invoke('auris:getPreferredLang') as Promise<string>,
+  setPreferredLang: (lang: string) => ipcRenderer.invoke('auris:setPreferredLang', lang) as Promise<void>,
 
   hasApiKey: () => ipcRenderer.invoke('auris:hasApiKey'),
   setApiKey: (key: string) => ipcRenderer.invoke('auris:setApiKey', key),

@@ -38,6 +38,22 @@ function todayKey(userId: string): string {
   return `rl:${userId}:${day}`;
 }
 
+/** Read-only quota lookup for a user — no increment. Used by `/quota`. */
+export async function readQuota(
+  userId: string,
+  isDev: boolean,
+  plan: PlanTier,
+  env: RateLimitEnv,
+): Promise<{ used: number; limit: number; resetAt: number }> {
+  const limit = PLAN_DAILY_LIMIT[plan];
+  if (isDev || !env.AURIS_RATELIMIT) {
+    return { used: 0, limit, resetAt: nextUtcMidnight() };
+  }
+  const raw = await env.AURIS_RATELIMIT.get(todayKey(userId));
+  const used = raw ? parseInt(raw, 10) : 0;
+  return { used, limit, resetAt: nextUtcMidnight() };
+}
+
 function nextUtcMidnight(): number {
   const d = new Date();
   d.setUTCHours(24, 0, 0, 0);

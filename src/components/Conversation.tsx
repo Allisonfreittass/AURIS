@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 import { AurisIconMark } from './logo/AurisIconMark';
 
 export interface Message {
@@ -10,9 +10,15 @@ export interface Message {
    */
   role: 'user' | 'detected' | 'auris';
   text: string;
+  /** Created-at timestamp (ms). Used to render time markers between messages. */
+  ts: number;
   streaming?: boolean;
   error?: string;
 }
+
+/** Threshold in ms above which we render a "── X min depois ──" divider
+ *  between two consecutive messages. Below it the gap is conversational. */
+const TIME_MARKER_GAP_MS = 2 * 60 * 1000;
 
 interface Props {
   messages: Message[];
@@ -25,26 +31,83 @@ interface Props {
  *
  * Latest Auris message can be in `streaming` state (caret blinks at end).
  */
+const NEAR_BOTTOM_PX = 80;
+
 export function Conversation({ messages }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const stickToBottom = useRef(true);
 
-  // Auto-scroll to bottom on every change.
+  // Track whether the user is reading near the bottom or has scrolled up
+  // to read an older response. Only auto-scroll when we're already near
+  // the tail — otherwise streaming tokens shouldn't yank the viewport.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    const onScroll = () => {
+      const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+      stickToBottom.current = distance < NEAR_BOTTOM_PX;
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // When messages mutate, scroll to bottom only if the user is already
+  // there (or hasn't scrolled yet). Smooth on full bumps, instant for
+  // streaming deltas to avoid juddering.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (!stickToBottom.current) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  // First render: pin to bottom regardless.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div
       ref={scrollRef}
       className="auris-scroll flex-1 overflow-y-auto px-5 py-4"
     >
-      <div className="flex flex-col gap-5">
-        {messages.map((m) => (
-          <MessageRow key={m.id} message={m} />
-        ))}
+      <div className="flex flex-col gap-5 pb-2">
+        {messages.map((m, i) => {
+          const prev = messages[i - 1];
+          const showMarker =
+            prev && m.ts - prev.ts > TIME_MARKER_GAP_MS;
+          return (
+            <Fragment key={m.id}>
+              {showMarker && <TimeMarker fromTs={prev.ts} toTs={m.ts} />}
+              <MessageRow message={m} />
+            </Fragment>
+          );
+        })}
       </div>
+    </div>
+  );
+}
+
+/** Soft horizontal divider with the relative gap between two messages,
+ *  e.g. "── 5 min depois ──". Helps the user read context boundaries. */
+function TimeMarker({ fromTs, toTs }: { fromTs: number; toTs: number }) {
+  const diffMs = toTs - fromTs;
+  const minutes = Math.round(diffMs / 60_000);
+  const label =
+    minutes < 60
+      ? `${minutes} min depois`
+      : minutes < 60 * 24
+        ? `${Math.round(minutes / 60)} h depois`
+        : `${Math.round(minutes / (60 * 24))} d depois`;
+  return (
+    <div className="flex items-center gap-3 py-1">
+      <span className="h-px flex-1 bg-white/[0.05]" />
+      <span className="font-mono text-[9px] uppercase tracking-widest text-faint">
+        {label}
+      </span>
+      <span className="h-px flex-1 bg-white/[0.05]" />
     </div>
   );
 }

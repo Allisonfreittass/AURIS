@@ -12,6 +12,8 @@ release/
 .env.*.local
 .env.production
 
+sessions/
+
 python-sidecar/.venv/
 python-sidecar/__pycache__/
 python-sidecar/build/

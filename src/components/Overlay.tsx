@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { TopBar } from './TopBar';
-import { LiveRibbon } from './LiveRibbon';
+import { TranscriptStream } from './TranscriptStream';
 import { Conversation, type Message } from './Conversation';
-import { EmptyState } from './EmptyState';
+import { AmbientCanvas } from './AmbientCanvas';
 import { AskInput, type AskInputHandle } from './AskInput';
 import { AccountScreen } from './AccountScreen';
+import { ConversationToolbar } from './ConversationToolbar';
 import { ErrorBanner } from './ErrorBanner';
 import { auris } from '../lib/ipc';
 import type { AudioErrorEvent, AurisMode, StatusKind } from '../../shared/ipc';
@@ -22,11 +23,21 @@ export function Overlay({ onSignedOut }: Props) {
   const [isRunning, setIsRunning] = useState(false);
   const [mode, setMode] = useState<AurisMode>('manual');
 
-  const [latestFinal, setLatestFinal] = useState('');
   const [partialLine, setPartialLine] = useState('');
+
+  // Full history of transcript finals since last clear. Capped to keep
+  // memory sane on multi-hour sessions; the same cap roughly tracks the
+  // rolling buffer in main (`finals[]` in ClaudeStreamer).
+  type TranscriptEntry = { text: string; ts: number; lang?: string; translated?: boolean };
+  const [transcriptHistory, setTranscriptHistory] = useState<TranscriptEntry[]>([]);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [streaming, setStreaming] = useState(false);
+
+  // Number of transcript finals captured since the last clearContext().
+  // Used by the TopBar context indicator. The actual rolling buffer in
+  // main is capped at 40, so we cap the visual at the same number.
+  const [finalCount, setFinalCount] = useState(0);
 
   const [audioError, setAudioError] = useState<AudioErrorEvent | null>(null);
   const [llmError, setLlmError] = useState<string | null>(null);
@@ -41,8 +52,30 @@ export function Overlay({ onSignedOut }: Props) {
   useEffect(() => {
     const offT = auris.onTranscript((e) => {
       if (e.final) {
-        setLatestFinal(e.text);
         setPartialLine('');
+
+        // Translation events upgrade the entry that was already pushed
+        // (matched by `ts`); originals push a new entry. Cap at 200 to
+        // keep memory bounded on long sessions.
+        setTranscriptHistory((prev) => {
+          if (e.translated) {
+            const out = prev.map((entry) =>
+              entry.ts === e.ts
+                ? { ...entry, text: e.text, translated: true, lang: e.lang ?? entry.lang }
+                : entry,
+            );
+            return out;
+          }
+          const next = [
+            ...prev,
+            { text: e.text, ts: e.ts, lang: e.lang, translated: false },
+          ];
+          return next.length > 200 ? next.slice(next.length - 200) : next;
+        });
+
+        if (!e.translated) {
+          setFinalCount((c) => Math.min(c + 1, 40));
+        }
       } else {
         setPartialLine(e.text);
       }
@@ -52,10 +85,11 @@ export function Overlay({ onSignedOut }: Props) {
     // a "detected" bubble + a placeholder Auris message that the upcoming
     // streamed deltas will fill in (same channel as manual asks).
     const offDQ = auris.onDetectedQuestion((e) => {
+      const now = Date.now();
       setMessages((prev) => [
         ...prev,
-        { id: makeId(), role: 'detected', text: e.text },
-        { id: makeId(), role: 'auris', text: '', streaming: true },
+        { id: makeId(), role: 'detected', text: e.text, ts: now },
+        { id: makeId(), role: 'auris', text: '', ts: now, streaming: true },
       ]);
       setStreaming(true);
     });
@@ -118,6 +152,8 @@ export function Overlay({ onSignedOut }: Props) {
   // ── actions ──────────────────────────────────────────────────────────
   async function handleToggleRun() {
     if (isRunning) {
+      // No auto-save dialog — that surprised users. Exporting is explicit
+      // via the "Exportar" button in the conversation toolbar.
       await auris.stop();
       setIsRunning(false);
     } else {
@@ -128,15 +164,12 @@ export function Overlay({ onSignedOut }: Props) {
   }
 
   function handleAskFired(question: string) {
+    const now = Date.now();
     setMessages((prev) => [
       ...prev,
-      { id: makeId(), role: 'user', text: question },
-      { id: makeId(), role: 'auris', text: '', streaming: true },
+      { id: makeId(), role: 'user', text: question, ts: now },
+      { id: makeId(), role: 'auris', text: '', ts: now, streaming: true },
     ]);
-  }
-
-  function handlePickExample(text: string) {
-    askInputRef.current?.setText(text);
   }
 
   async function handleModeChange(next: AurisMode) {
@@ -147,6 +180,73 @@ export function Overlay({ onSignedOut }: Props) {
       console.error('failed to set mode', err);
     }
   }
+
+  async function handleClearContext(partial: boolean = false) {
+    if (partial) {
+      // Keep the most recent user/auris exchange (last 2 messages) so a
+      // follow-up question still has continuity. We DON'T touch the main
+      // process's transcript buffer in this case — let the rolling window
+      // age out naturally.
+      setMessages((prev) => prev.slice(-2));
+      setStreaming(false);
+      return;
+    }
+    setMessages([]);
+    setStreaming(false);
+    setFinalCount(0);
+    setTranscriptHistory([]);
+    try {
+      await auris.clearContext();
+    } catch (err) {
+      console.error('failed to clear context', err);
+    }
+  }
+
+  async function handleExport() {
+    if (messages.length === 0 && transcriptHistory.length === 0) return;
+    const md = renderSessionAsMarkdown(messages, transcriptHistory);
+    // Goes through main → writes under Documents/Auris/sessions/ and
+    // reveals the file in Explorer. No browser download dialog.
+    await auris.saveSession(md);
+  }
+
+  // Ctrl+L → limpar contexto (terminal convention).
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) {
+        e.preventDefault();
+        void handleClearContext(e.shiftKey);
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-clear after N minutes of complete inactivity (no new transcript
+  // finals + no asks). Resets the timer on any signal of activity. Default
+  // 5 min; tweak the constant to taste.
+  const lastActivityRef = useRef<number>(Date.now());
+  const idleTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    lastActivityRef.current = Date.now();
+  }, [messages, transcriptHistory, partialLine, streaming]);
+
+  useEffect(() => {
+    const IDLE_LIMIT_MS = 5 * 60 * 1000;
+    idleTimerRef.current = setInterval(() => {
+      if (messages.length === 0) return;
+      const idleFor = Date.now() - lastActivityRef.current;
+      if (idleFor >= IDLE_LIMIT_MS) {
+        console.log('[overlay] auto-clearing context after idle');
+        void handleClearContext(false);
+      }
+    }, 30_000);
+    return () => {
+      if (idleTimerRef.current) clearInterval(idleTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length]);
 
   // ── render ───────────────────────────────────────────────────────────
   const empty = messages.length === 0;
@@ -169,19 +269,24 @@ export function Overlay({ onSignedOut }: Props) {
           onCloseAccount={() => setView('main')}
           mode={mode}
           onModeChange={handleModeChange}
+          contextCount={finalCount}
         />
 
         {view === 'account' ? (
           <AccountScreen onSignedOut={onSignedOut} />
         ) : (
           <>
-            <LiveRibbon
-              status={status}
-              partialLine={partialLine}
-              latestFinal={latestFinal}
-            />
-
-            <div className="h-px w-full bg-white/[0.04]" />
+            {transcriptHistory.length > 0 && (
+              <>
+                <TranscriptStream
+                  status={status}
+                  history={transcriptHistory}
+                  partialLine={partialLine}
+                  expanded={messages.length === 0}
+                />
+                <div className="h-px w-full bg-white/[0.04]" />
+              </>
+            )}
 
             <ErrorBanner
               audioError={audioError}
@@ -196,17 +301,22 @@ export function Overlay({ onSignedOut }: Props) {
               onDismissLlm={() => setLlmError(null)}
             />
 
-            {empty ? (
-              <EmptyState
+            {messages.length > 0 ? (
+              <Conversation messages={messages} />
+            ) : transcriptHistory.length === 0 ? (
+              <AmbientCanvas
+                status={status}
                 isRunning={isRunning}
                 mode={mode}
-                onModeChange={handleModeChange}
-                onPickExample={handlePickExample}
               />
-            ) : (
-              <Conversation messages={messages} />
-            )}
+            ) : null}
 
+            <ConversationToolbar
+              messageCount={messages.length}
+              transcriptCount={transcriptHistory.length}
+              onClearContext={handleClearContext}
+              onExport={handleExport}
+            />
             <AskInput
               ref={askInputRef}
               busy={streaming}
@@ -242,6 +352,82 @@ function isEmptyResponse(text: string): boolean {
   if (/^[—–-]+$/.test(t)) return true;
   if (t.length <= 3) return true;
   return false;
+}
+
+interface TranscriptEntry {
+  text: string;
+  ts: number;
+  lang?: string;
+  translated?: boolean;
+}
+
+/** Render the session as a Markdown document for export. Includes both
+ *  the live audio transcript (when there is one) and the Q&A conversation
+ *  with Auris, in chronological order so the user gets a single document
+ *  describing what they listened to + what they asked about it. */
+function renderSessionAsMarkdown(
+  msgs: Message[],
+  transcripts: TranscriptEntry[],
+): string {
+  const earliest =
+    Math.min(
+      msgs[0]?.ts ?? Number.POSITIVE_INFINITY,
+      transcripts[0]?.ts ?? Number.POSITIVE_INFINITY,
+    ) || Date.now();
+  const stamp = new Date(earliest).toLocaleString('pt-BR');
+
+  const lines: string[] = [
+    '# Sessão Auris',
+    '',
+    `_Iniciada em ${stamp}_`,
+    '',
+    '---',
+    '',
+  ];
+
+  // Audio transcript section (skip if empty).
+  if (transcripts.length > 0) {
+    lines.push('## Transcrição do áudio');
+    lines.push('');
+    for (const t of transcripts) {
+      const time = new Date(t.ts).toLocaleTimeString('pt-BR');
+      const langTag = t.lang
+        ? t.translated
+          ? ` _[${t.lang} → traduzido]_`
+          : ` _[${t.lang}]_`
+        : '';
+      lines.push(`- **${time}**${langTag} ${t.text}`);
+    }
+    lines.push('');
+  }
+
+  // Q&A conversation section (skip if empty).
+  if (msgs.length > 0) {
+    lines.push('## Conversa com Auris');
+    lines.push('');
+    for (const m of msgs) {
+      const t = new Date(m.ts).toLocaleTimeString('pt-BR');
+      if (m.role === 'user') {
+        lines.push(`**Você** · ${t}`);
+        lines.push('');
+        lines.push(m.text);
+      } else if (m.role === 'detected') {
+        lines.push(`**Pergunta detectada no áudio** · ${t}`);
+        lines.push('');
+        lines.push(`> ${m.text}`);
+      } else {
+        lines.push(`**Auris** · ${t}`);
+        lines.push('');
+        lines.push(m.text || (m.error ? `_erro: ${m.error}_` : ''));
+      }
+      lines.push('');
+      lines.push('');
+    }
+  }
+
+  lines.push('---');
+  lines.push(`_Exportado em ${new Date().toLocaleString('pt-BR')} via Auris desktop_`);
+  return lines.join('\n');
 }
 
 function makeId(): string {

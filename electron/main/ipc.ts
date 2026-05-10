@@ -2,7 +2,8 @@ import { BrowserWindow, ipcMain } from 'electron';
 import Groq from 'groq-sdk';
 import * as secrets from './secrets';
 import * as auth from './auth';
-import type { AurisMode, AuthOpResult } from '../../shared/ipc';
+import { saveSessionMarkdown } from './sessionStore';
+import type { AurisMode, AuthOpResult, PopupShape } from '../../shared/ipc';
 
 /** Validate a Groq key by issuing a 1-token request before we persist it. */
 async function validateApiKey(key: string): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -31,14 +32,18 @@ export interface IpcHooks {
   minimize: () => void;
   minimizeToTray: () => void;
   showMainWindow: () => void;
+  setPopupShape: (shape: PopupShape) => void;
   isRunning: () => boolean;
   ask: (question: string) => Promise<void>;
   cancelAsk: () => void;
+  clearContext: () => void;
   /** Forces the main process to forget any cached LLM client so the next
    *  ask() reloads auth fresh — needed after sign in / sign out. */
   resetLlmClient: () => void;
   getMode: () => AurisMode;
   setMode: (mode: AurisMode) => void;
+  getPreferredLang: () => string;
+  setPreferredLang: (lang: string) => void;
 }
 
 export function registerIpcHandlers(_getWindow: () => BrowserWindow | null, hooks: IpcHooks) {
@@ -82,6 +87,14 @@ export function registerIpcHandlers(_getWindow: () => BrowserWindow | null, hook
     return auth.getProfile();
   });
 
+  ipcMain.handle('auris:getQuota', async () => {
+    return auth.getQuota();
+  });
+
+  ipcMain.handle('auris:updateUserContext', async (_evt, context: string | null) => {
+    return auth.updateUserContext(context);
+  });
+
   // ── legacy: bring-your-own Groq key ────────────────────────────────
   ipcMain.handle('auris:hasApiKey', () => secrets.hasApiKey());
 
@@ -108,6 +121,7 @@ export function registerIpcHandlers(_getWindow: () => BrowserWindow | null, hook
   ipcMain.handle('auris:minimize', () => hooks.minimize());
   ipcMain.handle('auris:minimizeToTray', () => hooks.minimizeToTray());
   ipcMain.handle('auris:showMainWindow', () => hooks.showMainWindow());
+  ipcMain.handle('auris:setPopupShape', (_evt, shape: PopupShape) => hooks.setPopupShape(shape));
 
   // ── session lifecycle ─────────────────────────────────────────────
   ipcMain.handle('auris:start', async () => {
@@ -126,6 +140,17 @@ export function registerIpcHandlers(_getWindow: () => BrowserWindow | null, hook
     hooks.cancelAsk();
   });
 
+  ipcMain.handle('auris:clearContext', () => {
+    hooks.clearContext();
+  });
+
+  ipcMain.handle('auris:saveSession', (_evt, content: string) => {
+    return saveSessionMarkdown(content);
+  });
+
   ipcMain.handle('auris:getMode', () => hooks.getMode());
   ipcMain.handle('auris:setMode', (_evt, mode: AurisMode) => hooks.setMode(mode));
+
+  ipcMain.handle('auris:getPreferredLang', () => hooks.getPreferredLang());
+  ipcMain.handle('auris:setPreferredLang', (_evt, lang: string) => hooks.setPreferredLang(lang));
 }

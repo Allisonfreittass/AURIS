@@ -1,32 +1,44 @@
 import { BrowserWindow, screen } from 'electron';
 import path from 'node:path';
+import type { PopupShape } from '../../shared/ipc';
 
-const POPUP_WIDTH = 520;
-const POPUP_HEIGHT = 140;
 const TOP_MARGIN = 16;
 
 /**
- * Compact popup that floats at top-center of the primary display.
- * Used as the "minimized state" UI — visible while the main window is
- * minimized so the user can keep tabs on transcription/response without
- * having a full overlay covering their work.
+ * Window size for each popup state. The renderer reports its desired shape
+ * via `auris:setPopupShape` and we resize+reposition. Width grows with
+ * content; idle is a 72×72 floating icon, no card chrome.
+ */
+const SHAPE_SIZES: Record<PopupShape, { width: number; height: number }> = {
+  // Idle window has to be big enough for the sound-wave animation (which
+  // expands the button up to 2.4× its size, ~115px from a 48px button) plus
+  // shadow padding. The window is fully transparent — the user only sees
+  // the icon and ripples; the empty space around them isn't visible.
+  idle:     { width: 160, height: 160 },
+  compact:  { width: 520, height: 96  },  // status header + 1-line transcript
+  expanded: { width: 540, height: 220 },  // header + question banner + response
+};
+
+/**
+ * Compact popup that floats at top-center of the primary display. The
+ * `setPopupShape` helper resizes it on demand so the visual matches what's
+ * happening: a tiny floating icon when idle, a card when there's content.
  *
- * Key window flags:
- *  - frame:false + transparent:true → rounded card via CSS
- *  - skipTaskbar:true → popup itself never appears in taskbar
- *  - focusable:false → clicking it doesn't yank keyboard focus from
- *    whatever the user is actually working in
- *  - alwaysOnTop level 'pop-up-menu' → above normal windows but below OS chrome
+ * Window flags:
+ *  - frame:false + transparent:true → custom rounded shape via CSS
+ *  - skipTaskbar:true → no taskbar entry
+ *  - focusable:false → never steals keyboard from underlying app
+ *  - alwaysOnTop "pop-up-menu" → above normal windows but below OS chrome
  */
 export function createPopupWindow(): BrowserWindow {
+  const initial = SHAPE_SIZES.idle;
   const display = screen.getPrimaryDisplay();
-  const { width: screenWidth } = display.workArea;
-  const x = Math.floor((screenWidth - POPUP_WIDTH) / 2);
+  const x = Math.floor((display.workArea.width - initial.width) / 2);
   const y = display.workArea.y + TOP_MARGIN;
 
   const win = new BrowserWindow({
-    width: POPUP_WIDTH,
-    height: POPUP_HEIGHT,
+    width: initial.width,
+    height: initial.height,
     x,
     y,
     show: false,
@@ -40,7 +52,12 @@ export function createPopupWindow(): BrowserWindow {
     minimizable: false,
     maximizable: false,
     closable: false,
-    focusable: false,
+    // Was `focusable: false` for "never steal focus" — but Windows treats
+    // those windows as WS_EX_NOACTIVATE, which silently swallows mouse
+    // wheel events that should be scrolling our transcript pane. Better
+    // tradeoff: focusable=true, but always show via `showInactive()` so
+    // we don't yank focus from the user's underlying app on appear.
+    focusable: true,
     title: 'Auris',
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
@@ -63,4 +80,15 @@ export function createPopupWindow(): BrowserWindow {
   }
 
   return win;
+}
+
+/** Resize and re-center the popup based on the current state. */
+export function setPopupShape(win: BrowserWindow, shape: PopupShape): void {
+  if (!win || win.isDestroyed()) return;
+  const size = SHAPE_SIZES[shape];
+  const display = screen.getPrimaryDisplay();
+  const x = Math.floor((display.workArea.width - size.width) / 2);
+  const y = display.workArea.y + TOP_MARGIN;
+  // `animate=true` smooths the transition on Windows.
+  win.setBounds({ x, y, width: size.width, height: size.height }, true);
 }

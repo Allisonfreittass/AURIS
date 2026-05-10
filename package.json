@@ -19,6 +19,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.40.1",
     "dotenv": "^17.4.2",
+    "electron-updater": "^6.8.3",
     "groq-sdk": "^1.1.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
@@ -97,6 +98,10 @@
       "uninstallerIcon": "resources/icon.ico",
       "installerHeaderIcon": "resources/icon.ico"
     },
-    "publish": null
+    "publish": {
+      "provider": "github",
+      "owner": "Allisonfreittass",
+      "repo": "AURIS"
+    }
   }
 }

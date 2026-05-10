@@ -16,7 +16,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { authenticate, type ServerEnv } from './auth';
 import { fetchUserPlan } from './profiles';
-import { checkAndIncrement } from './ratelimit';
+import { checkAndIncrement, readQuota } from './ratelimit';
 
 interface FullEnv extends ServerEnv {
   AURIS_RATELIMIT?: KVNamespace;
@@ -51,6 +51,36 @@ app.get('/', (c) =>
 app.get('/health', (c) =>
   c.json({ ok: true, service: 'auris-proxy', version: '0.2.0' }),
 );
+
+/**
+ * Read-only quota probe. Same Bearer auth as the proxy routes; returns the
+ * caller's plan + how many requests they've used today + when the counter
+ * resets. Used by the desktop AccountScreen to render a usage bar without
+ * waiting for an actual LLM call to fail.
+ */
+app.get('/quota', async (c) => {
+  const auth = c.req.header('Authorization');
+  if (!auth?.startsWith('Bearer ')) {
+    return c.json({ error: { type: 'auth_error', message: 'missing bearer token' } }, 401);
+  }
+  const token = auth.slice(7).trim();
+  const authResult = await authenticate(token, c.env);
+  if (!authResult.ok) {
+    return c.json(
+      { error: { type: 'auth_error', message: authResult.error } },
+      authResult.status as 401 | 500,
+    );
+  }
+  const plan = await fetchUserPlan(authResult.userId, c.env);
+  const q = await readQuota(authResult.userId, authResult.isDev, plan, c.env);
+  return c.json({
+    plan,
+    used: q.used,
+    limit: q.limit,
+    remaining: Math.max(q.limit - q.used, 0),
+    reset_at: q.resetAt,
+  });
+});
 
 app.all('/openai/v1/*', async (c) => {
   // 1. Auth: Bearer <token>.

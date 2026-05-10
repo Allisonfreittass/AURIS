@@ -36,16 +36,27 @@
 
 @layer components {
   /* Soft scrollbar for content panes. */
+  .auris-scroll {
+    /* Wheel events from elements with `user-select: none` ancestors can
+       behave inconsistently on some Windows mouse drivers. Force pointer
+       events on and allow text selection inside scroll panes so the user
+       can read back & highlight transcripts comfortably. */
+    pointer-events: auto;
+    user-select: text;
+    -webkit-user-select: text;
+    /* Prevent rubber-banding from propagating to the parent window. */
+    overscroll-behavior: contain;
+  }
   .auris-scroll::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
+    width: 6px;
+    height: 6px;
   }
   .auris-scroll::-webkit-scrollbar-track {
     background: transparent;
   }
   .auris-scroll::-webkit-scrollbar-thumb {
     background: theme('colors.border');
-    border-radius: 2px;
+    border-radius: 3px;
     transition: background-color 0.2s;
   }
   .auris-scroll::-webkit-scrollbar-thumb:hover {

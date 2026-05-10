@@ -86,6 +86,12 @@ export default {
           '0%, 70%, 100%': { opacity: '1' },
           '20%, 50%':      { opacity: '0' },
         },
+        // Concentric ripples emanating from the ambient icon when listening.
+        'sound-wave': {
+          '0%':   { transform: 'scale(1)',   opacity: '0.55' },
+          '70%':  { opacity: '0.05' },
+          '100%': { transform: 'scale(2.4)', opacity: '0' },
+        },
         // Subtle entrance for screens.
         'fade-up': {
           '0%':   { opacity: '0', transform: 'translateY(8px)' },
@@ -102,6 +108,7 @@ export default {
         float:         'float 4s ease-in-out infinite',
         breathe:       'breathe 1.8s ease-in-out infinite',
         'caret-blink': 'caret-blink 1.1s ease-in-out infinite',
+        'sound-wave':  'sound-wave 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite',
         'fade-up':     'fade-up 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both',
         shimmer:       'shimmer 2.4s linear infinite',
       },

@@ -30,9 +30,20 @@ COMPRESSION_RATIO_THRESHOLD = 2.4
 TEMPERATURE_FALLBACK = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 
 
+class TranscribeResult:
+    """Output of a single Whisper call. `lang` is the detected language
+    code (e.g. 'pt', 'en', 'es') or None when unknown / forced."""
+
+    __slots__ = ("text", "lang")
+
+    def __init__(self, text: str, lang: Optional[str] = None):
+        self.text = text
+        self.lang = lang
+
+
 class WhisperBackend(ABC):
     @abstractmethod
-    def transcribe(self, audio_f32: np.ndarray) -> str:
+    def transcribe(self, audio_f32: np.ndarray) -> TranscribeResult:
         ...
 
     def warmup(self) -> None:
@@ -71,8 +82,8 @@ class LocalBackend(WhisperBackend):
         except Exception as e:
             log(f"warmup failed (non-fatal): {e}")
 
-    def transcribe(self, audio_f32: np.ndarray) -> str:
-        segments, _info = self.model.transcribe(
+    def transcribe(self, audio_f32: np.ndarray) -> TranscribeResult:
+        segments, info = self.model.transcribe(
             audio_f32,
             language=self.language,
             beam_size=1,
@@ -91,7 +102,9 @@ class LocalBackend(WhisperBackend):
             text = seg.text.strip()
             if text:
                 parts.append(text)
-        return " ".join(parts).strip()
+        text = " ".join(parts).strip()
+        lang = getattr(info, "language", None)
+        return TranscribeResult(text=text, lang=lang)
 
 
 class RemoteBackend(WhisperBackend):
@@ -121,7 +134,7 @@ class RemoteBackend(WhisperBackend):
         # which is in the same order as a single local CPU partial anyway.
         return
 
-    def transcribe(self, audio_f32: np.ndarray) -> str:
+    def transcribe(self, audio_f32: np.ndarray) -> TranscribeResult:
         token = self.get_token()
         if not token:
             raise RuntimeError("no auth token available for remote whisper")
@@ -131,15 +144,15 @@ class RemoteBackend(WhisperBackend):
         files = {"file": ("audio.wav", wav, "audio/wav")}
         data = {
             "model": self.GROQ_MODEL,
-            "response_format": "json",
+            # `verbose_json` includes the detected `language` field; needed
+            # for the live-translation feature so main can decide whether
+            # to translate the snippet before showing it.
+            "response_format": "verbose_json",
             "temperature": "0",
         }
         if self.language:
             data["language"] = self.language
 
-        # The session lock serializes outbound HTTP — the streaming
-        # transcriber already has its own worker thread, so this just
-        # keeps the requests.Session usage single-threaded internally.
         with self._lock:
             try:
                 resp = self._session.post(
@@ -154,6 +167,12 @@ class RemoteBackend(WhisperBackend):
 
         if resp.status_code == 401:
             raise RuntimeError(f"proxy rejected token (401) at {self.endpoint} — session may have expired")
+        if resp.status_code == 429:
+            # Rate-limited — surface a short, recognizable message so the
+            # main process can route it to a friendly banner instead of
+            # dumping the raw Groq JSON. The worker just skips this chunk;
+            # the next partial / final retries naturally.
+            raise RuntimeError("rate_limit: whisper")
         if resp.status_code >= 400:
             snippet = resp.text[:300] if resp.text else "(empty body)"
             raise RuntimeError(f"proxy returned {resp.status_code} from {self.endpoint} :: {snippet}")
@@ -164,7 +183,8 @@ class RemoteBackend(WhisperBackend):
             raise RuntimeError(f"proxy returned non-JSON body: {e}") from e
 
         text = (payload.get("text") or "").strip()
-        return text
+        lang = payload.get("language")
+        return TranscribeResult(text=text, lang=lang)
 
 
 def _encode_wav(audio_f32: np.ndarray, sample_rate: int = SAMPLE_RATE) -> bytes:

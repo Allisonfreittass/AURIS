@@ -6,12 +6,12 @@
     <title>Auris — escute junto com você</title>
     <meta
       name="description"
-      content="Auris é um assistente desktop que ouve o áudio do seu PC em tempo real e responde perguntas sobre o que você está assistindo, ouvindo ou conversando."
+      content="Auris é um assistente desktop que ouve o áudio do seu PC em qualquer idioma, traduz pra português em tempo real e responde perguntas sobre o que você está assistindo, ouvindo ou conversando."
     />
     <meta property="og:title" content="Auris" />
     <meta
       property="og:description"
-      content="Um assistente que escuta junto com você."
+      content="Um assistente que escuta junto com você — em qualquer idioma."
     />
     <meta property="og:type" content="website" />
 
@@ -68,9 +68,10 @@
         </h1>
         <p class="lead">
           Auris ouve o áudio do seu PC em tempo real — vídeo, podcast,
-          chamada — e responde perguntas sobre o que está rolando. No modo
-          automático, ele detecta perguntas feitas a você no áudio e sugere
-          uma resposta articulada na hora.
+          chamada — em <em class="lead-em">qualquer idioma</em>, traduz pra
+          português conforme a fala chega, e responde perguntas sobre o que
+          está rolando. No modo automático, detecta perguntas feitas a você
+          no áudio e sugere uma resposta articulada na hora.
         </p>
 
         <div class="cta-row" id="download">
@@ -104,8 +105,11 @@
             <div class="mock-content">
               <div class="mock-ribbon">
                 <span class="mock-ribbon-dot"></span>
-                <span class="mock-ribbon-status">OUVINDO</span>
-                <span class="mock-ribbon-text">"...e como funciona o protocolo de consenso?"</span>
+                <span class="mock-ribbon-status">OUVINDO · EN→PT</span>
+                <span class="mock-ribbon-text">
+                  <span class="mock-translate-badge">↻ EN</span>
+                  "...e como funciona o protocolo de consenso?"
+                </span>
               </div>
               <div class="mock-msg mock-msg-user">qual o ponto principal?</div>
               <div class="mock-msg-auris">
@@ -123,7 +127,7 @@
       </section>
 
       <section class="features" id="features">
-        <h2>Dois modos. Um assistente.</h2>
+        <h2>Três jeitos de usar.</h2>
 
         <div class="feature-grid">
           <article class="feature-card">
@@ -151,7 +155,7 @@
                 <path d="M6 13a6 6 0 0012 0M12 19v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
               </svg>
             </div>
-            <h3>Modo Auto <span class="badge">novo</span></h3>
+            <h3>Modo Auto</h3>
             <p>
               Auris detecta quando alguém te faz uma pergunta no áudio (entrevista,
               reunião, debate, sales call) e sugere uma resposta articulada que
@@ -161,6 +165,25 @@
               <li>Entrevistas de emprego com vídeo de fundo</li>
               <li>Sales calls com pergunta surpresa do cliente</li>
               <li>Reuniões com perguntas técnicas pesadas</li>
+            </ul>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+                <path d="M3 5h11M3 5l3-3M3 5l3 3M21 19h-11M21 19l-3-3M21 19l-3 3M14 8.5l-4 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <h3>Tradução automática <span class="badge">novo</span></h3>
+            <p>
+              Áudio em inglês, espanhol, francês ou outro idioma? Auris traduz
+              a transcrição pra português conforme a fala chega — e a resposta
+              do assistente já vem no idioma que você escolheu.
+            </p>
+            <ul>
+              <li>Cursos e palestras em inglês</li>
+              <li>Podcasts internacionais</li>
+              <li>Reuniões com cliente estrangeiro</li>
             </ul>
           </article>
         </div>
@@ -174,12 +197,20 @@
             <p>Captura via WASAPI loopback. Sem confusão entre sua voz e o que toca.</p>
           </div>
           <div class="trust-item">
-            <strong>Transcrição na nuvem</strong>
-            <p>Whisper-large-v3-turbo via Groq. Real-time + qualidade de PT-BR alta.</p>
+            <strong>Transcrição multilíngue</strong>
+            <p>Whisper-large-v3-turbo detecta o idioma sozinho — você não precisa configurar nada.</p>
           </div>
           <div class="trust-item">
-            <strong>Resposta com contexto</strong>
-            <p>Llama 3.3 70B usa os últimos 40 trechos de transcrição como contexto.</p>
+            <strong>Tradução em tempo real</strong>
+            <p>Llama 3.3 70B traduz cada trecho final assim que ele é transcrito.</p>
+          </div>
+          <div class="trust-item">
+            <strong>Modo flutuante</strong>
+            <p>Minimize a janela e Auris vira um ícone discreto sempre no topo, sem roubar foco.</p>
+          </div>
+          <div class="trust-item">
+            <strong>Histórico acumulativo</strong>
+            <p>Tudo que foi dito fica no painel — role pra cima e leia o que perdeu.</p>
           </div>
           <div class="trust-item">
             <strong>Conta cifrada localmente</strong>

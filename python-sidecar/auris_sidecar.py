@@ -86,8 +86,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Auris transcription sidecar")
     parser.add_argument("--model", default="tiny",
                         help="faster-whisper model size for local backend")
-    parser.add_argument("--language", default="pt",
-                        help="Whisper language code; 'auto' for auto-detect")
+    parser.add_argument("--language", default="auto",
+                        help="Whisper language code (e.g. 'pt', 'en'); 'auto' for "
+                             "auto-detect (default). Forcing a wrong language causes "
+                             "Whisper to phonetically distort foreign speech — keep "
+                             "'auto' and let the main process translate to the user's "
+                             "preferred display language after.")
     parser.add_argument("--source", default="loopback",
                         choices=["loopback", "mic", "both"],
                         help="audio source")
@@ -157,8 +161,8 @@ def main() -> int:
                 continue
             transcriber.push(
                 frame,
-                on_partial=lambda text: emit("transcript", text=text, final=False),
-                on_final=lambda text: emit("transcript", text=text, final=True),
+                on_partial=lambda text, lang: emit("transcript", text=text, final=False, lang=lang),
+                on_final=lambda text, lang: emit("transcript", text=text, final=True, lang=lang),
             )
     except KeyboardInterrupt:
         pass

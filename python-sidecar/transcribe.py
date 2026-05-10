@@ -30,7 +30,13 @@ FRAME_BYTES = FRAME_SAMPLES * 2  # int16 mono
 
 # State-machine thresholds (in 20ms frames).
 SILENCE_FRAMES_TO_FINALIZE = 25   # 500ms
-PARTIAL_INTERVAL_SECONDS = 1.2
+# Groq's free-tier whisper-large-v3-turbo limit is 20 RPM. With partials
+# every 1.2s (~50/min) plus finals (~5/min) we'd blow past it. 2.5s caps
+# partial-only traffic to ~24 RPM — usually fits with finals on top, and
+# 429s are recoverable since the worker just retries on the next tick.
+# If you upgrade Groq to Dev Tier you can drop this back to 1.2 for
+# snappier captions.
+PARTIAL_INTERVAL_SECONDS = 2.5
 PARTIAL_WINDOW_SECONDS = 3.0
 RING_BUFFER_SECONDS = 60.0
 MAX_FINAL_SECONDS = 45.0
@@ -43,7 +49,7 @@ EMPTY_PARTIALS_TO_FORCE_FINAL = 3
 class _TranscribeRequest:
     audio: np.ndarray
     is_final: bool
-    on_result: Callable[[str], None]
+    on_result: Callable[[str, Optional[str]], None]
 
 
 class StreamingTranscriber:
@@ -81,8 +87,8 @@ class StreamingTranscriber:
     def push(
         self,
         pcm_frame: bytes,
-        on_partial: Callable[[str], None],
-        on_final: Callable[[str], None],
+        on_partial: Callable[[str, Optional[str]], None],
+        on_final: Callable[[str, Optional[str]], None],
     ) -> None:
         if len(pcm_frame) != FRAME_BYTES:
             return
@@ -135,7 +141,7 @@ class StreamingTranscriber:
             self.empty_partial_streak = 0
         self.ring.clear()
 
-    def _submit_partial(self, on_result: Callable[[str], None]) -> None:
+    def _submit_partial(self, on_result: Callable[[str, Optional[str]], None]) -> None:
         if self.segment_start_idx is None:
             return
         all_frames = list(self.ring)
@@ -145,7 +151,7 @@ class StreamingTranscriber:
             segment = segment[-max_partial_frames:]
         self._submit(segment, is_final=False, on_result=on_result)
 
-    def _submit_final(self, on_result: Callable[[str], None]) -> None:
+    def _submit_final(self, on_result: Callable[[str, Optional[str]], None]) -> None:
         if self.segment_start_idx is None:
             return
         all_frames = list(self.ring)
@@ -159,7 +165,7 @@ class StreamingTranscriber:
         self,
         frames: list,
         is_final: bool,
-        on_result: Callable[[str], None],
+        on_result: Callable[[str, Optional[str]], None],
     ) -> None:
         if not frames:
             return
@@ -194,11 +200,14 @@ class StreamingTranscriber:
                 break
 
             t0 = time.time()
+            text = ""
+            lang = None
             try:
-                text = self.backend.transcribe(req.audio)
+                result = self.backend.transcribe(req.audio)
+                text = result.text
+                lang = result.lang
             except Exception as e:
                 log(f"backend error: {e}")
-                text = ""
             finally:
                 if not req.is_final:
                     with self._lock:
@@ -206,7 +215,7 @@ class StreamingTranscriber:
 
             elapsed = time.time() - t0
             kind = "FINAL" if req.is_final else "partial"
-            log(f"transcribe {kind} took {elapsed:.2f}s ({len(req.audio)/SAMPLE_RATE:.1f}s of audio) → {text!r}")
+            log(f"transcribe {kind} took {elapsed:.2f}s ({len(req.audio)/SAMPLE_RATE:.1f}s of audio, lang={lang}) → {text!r}")
 
             if not req.is_final:
                 with self._lock:
@@ -221,6 +230,6 @@ class StreamingTranscriber:
                         continue
                     self.last_partial_text = text
                 try:
-                    req.on_result(text)
+                    req.on_result(text, lang)
                 except Exception as e:
                     log(f"on_result callback error: {e}")
