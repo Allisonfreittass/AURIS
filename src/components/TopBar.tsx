@@ -16,6 +16,13 @@ interface Props {
   contextCount: number;
 }
 
+/**
+ * Top chrome of the main window. Layout (left → right):
+ *   [mark] Auris.    [ContextIndicator] [ModeToggle] [run/stop] [account] | [-][▢][×]
+ *
+ * Visual idiom: hairline rule below, no blur or glass. Pills use 2px corners
+ * and mono labels (9–10px tracked-out) per the brand identity.
+ */
 export function TopBar({
   isRunning,
   onToggleRun,
@@ -29,7 +36,7 @@ export function TopBar({
   const isAccount = view === 'account';
 
   return (
-    <header className="drag flex h-12 items-center justify-between gap-3 border-b border-white/[0.04] bg-bg/80 px-3 backdrop-blur-md">
+    <header className="drag flex h-12 items-center justify-between gap-3 border-b border-border bg-bg px-3">
       {/* Left: brand or back */}
       <div className="flex items-center gap-2.5">
         {isAccount ? (
@@ -37,7 +44,7 @@ export function TopBar({
             onClick={onCloseAccount}
             aria-label="Voltar"
             title="Voltar"
-            className="no-drag grid h-7 w-7 place-items-center rounded-md text-muted transition-colors hover:bg-white/[0.06] hover:text-text"
+            className="no-drag grid h-7 w-7 place-items-center rounded-sharp text-muted transition-colors hover:bg-elevated hover:text-text"
           >
             <svg width="11" height="11" viewBox="0 0 11 11" aria-hidden="true">
               <path
@@ -51,10 +58,11 @@ export function TopBar({
             </svg>
           </button>
         ) : (
-          <AurisIconMark className="h-[20px] w-[20px]" alive={isRunning} />
+          <AurisIconMark className="h-[18px] w-[18px]" alive={isRunning} />
         )}
-        <span className="font-serif text-[15px] font-light tracking-[0.16em] text-text">
-          {isAccount ? 'CONTA' : 'AURIS'}
+        <span className="font-sans text-[14px] font-semibold tracking-[-0.005em] text-text leading-none">
+          {isAccount ? 'Conta' : 'Auris'}
+          <span className="text-accent">.</span>
         </span>
       </div>
 
@@ -68,20 +76,20 @@ export function TopBar({
               onClick={onToggleRun}
               className={
                 isRunning
-                  ? 'flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-muted transition-colors hover:border-white/15 hover:text-text'
-                  : 'flex items-center gap-1.5 rounded-md bg-accent px-3 py-1 font-mono text-[10px] font-medium uppercase tracking-widest text-accent-ink shadow-accent-glow transition-all hover:bg-accent-bright'
+                  ? 'flex items-center gap-1.5 rounded-sharp border border-border bg-transparent px-2.5 py-1 font-mono text-[9px] font-medium uppercase tracking-widest text-subtle transition-colors hover:border-subtle hover:text-text'
+                  : 'flex items-center gap-1.5 rounded-sharp border border-accent/30 bg-accent/[0.08] px-2.5 py-1 font-mono text-[9px] font-medium uppercase tracking-widest text-accent transition-colors hover:bg-accent/[0.14] hover:border-accent/50'
               }
               aria-label={isRunning ? 'parar' : 'iniciar'}
             >
               {isRunning ? (
                 <>
-                  <span className="h-2 w-2 rounded-sm bg-current opacity-80" />
+                  <span className="h-1.5 w-1.5 rounded-[1px] bg-current" />
                   parar
                 </>
               ) : (
                 <>
-                  <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true">
-                    <path d="M1 0.5L7 4L1 7.5z" fill="currentColor" />
+                  <svg width="7" height="7" viewBox="0 0 7 7" aria-hidden="true">
+                    <path d="M0.5 0L6.5 3.5L0.5 7z" fill="currentColor" />
                   </svg>
                   iniciar
                 </>
@@ -91,7 +99,7 @@ export function TopBar({
               onClick={onOpenAccount}
               aria-label="Conta"
               title="Conta"
-              className="grid h-7 w-7 place-items-center rounded-md text-faint transition-colors hover:bg-white/[0.06] hover:text-text"
+              className="grid h-7 w-7 place-items-center rounded-sharp text-muted transition-colors hover:bg-elevated hover:text-text"
             >
               <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
                 <circle cx="6" cy="4" r="2" stroke="currentColor" strokeWidth="1.3" fill="none" />
@@ -104,7 +112,7 @@ export function TopBar({
                 />
               </svg>
             </button>
-            <span className="mx-1 h-4 w-px bg-white/[0.08]" />
+            <span className="mx-1 h-4 w-px bg-border" />
           </>
         )}
         <WindowControls />

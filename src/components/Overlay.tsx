@@ -253,11 +253,15 @@ export function Overlay({ onSignedOut }: Props) {
 
   return (
     <div className="relative flex h-full w-full items-stretch justify-stretch overflow-hidden bg-bg">
-      {/* atmospheric background */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <span className="absolute -left-24 top-12 h-64 w-64 rounded-full bg-brand-to/[0.05] blur-[100px]" />
-        <span className="absolute -right-32 bottom-24 h-80 w-80 rounded-full bg-accent/[0.04] blur-[120px]" />
-      </div>
+      {/* Faint grid overlay — corporate-system feel, very subtle. */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-30"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(37,45,56,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(37,45,56,0.5) 1px, transparent 1px)',
+          backgroundSize: '64px 64px',
+        }}
+      />
 
       <div className="relative flex w-full flex-col overflow-hidden">
         <TopBar
@@ -284,7 +288,7 @@ export function Overlay({ onSignedOut }: Props) {
                   partialLine={partialLine}
                   expanded={messages.length === 0}
                 />
-                <div className="h-px w-full bg-white/[0.04]" />
+                <div className="h-px w-full bg-border" />
               </>
             )}
 

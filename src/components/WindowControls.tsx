@@ -55,14 +55,14 @@ function ControlButton({
 }) {
   const danger_classes = danger
     ? 'hover:bg-danger/12 hover:text-danger'
-    : 'hover:bg-white/[0.06] hover:text-text';
+    : 'hover:bg-elevated hover:text-text';
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
       title={title}
-      className={`grid h-7 w-7 place-items-center rounded-md text-faint transition-colors ${danger_classes}`}
+      className={`grid h-7 w-7 place-items-center rounded-sharp text-muted transition-colors ${danger_classes}`}
     >
       {children}
     </button>

@@ -146,17 +146,19 @@ export function PopupOverlay() {
   // ── Active: full card with header + content ────────────────────────────
   return (
     <div className="drag flex h-full w-full items-stretch justify-stretch p-2">
-      <div className="glass-strong relative flex w-full flex-col overflow-hidden rounded-2xl shadow-pop ring-1 ring-white/[0.04]">
-        <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-to/40 to-transparent" />
+      <div className="relative flex w-full flex-col overflow-hidden rounded-soft border border-border bg-bg shadow-pop">
+        {/* Top hairline accent — single-pixel blue line, signature of the
+            corporate-system identity. */}
+        <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-accent/40" />
 
-        <header className="flex items-center gap-2.5 px-3 pt-2.5">
-          <AurisIconMark className="h-[16px] w-[16px]" alive={animate} />
-          <span className="font-serif text-[12px] font-light tracking-[0.18em] text-text">
-            AURIS
+        <header className="flex items-center gap-2.5 border-b border-border bg-surface px-3 py-2">
+          <AurisIconMark className="h-[14px] w-[14px]" alive={animate} />
+          <span className="font-sans text-[12px] font-semibold tracking-[-0.005em] text-text leading-none">
+            Auris<span className="text-accent">.</span>
           </span>
           <DotStatus status={status} />
           {mode === 'auto' && (
-            <span className="rounded-md border border-live/30 bg-live/10 px-1.5 py-0.5 font-mono text-[8px] font-medium uppercase tracking-widest text-live/90">
+            <span className="rounded-sharp border border-live/40 bg-live/[0.08] px-1.5 py-0.5 font-mono text-[8px] font-medium uppercase tracking-widest text-live">
               auto
             </span>
           )}
@@ -166,7 +168,7 @@ export function PopupOverlay() {
             onClick={() => auris.showMainWindow()}
             title="Abrir janela principal"
             aria-label="Abrir janela principal"
-            className="no-drag grid h-5 w-5 place-items-center rounded text-faint transition-colors hover:bg-white/[0.06] hover:text-text"
+            className="no-drag grid h-5 w-5 place-items-center rounded-sharp text-muted transition-colors hover:bg-elevated hover:text-text"
           >
             <svg width="9" height="9" viewBox="0 0 9 9" aria-hidden="true">
               <path
@@ -183,24 +185,24 @@ export function PopupOverlay() {
 
         <div
           ref={showResponse ? responseRef : transcriptRef}
-          className="no-drag auris-scroll flex-1 overflow-y-auto px-3 pb-2.5 pt-1.5 font-sans text-[11.5px] leading-[1.55]"
+          className="no-drag auris-scroll flex-1 overflow-y-auto px-3 pb-2.5 pt-2 leading-[1.6]"
         >
           {detectedQuestion && showResponse && (
-            <div className="mb-1.5 rounded-md bg-live/[0.08] px-2 py-1 font-serif text-[10.5px] italic leading-tight text-live/90 ring-1 ring-live/20">
+            <div className="mb-2 rounded-sharp border border-live/25 bg-live/[0.06] px-2 py-1.5 font-sans text-[11px] italic font-light leading-tight text-light">
               “{truncate(detectedQuestion, 90)}”
             </div>
           )}
 
           {showTranscript && (
-            <span className="text-text/85">
+            <span className="font-mono text-[11px] text-subtle">
               {history.map((entry, i) => (
                 <span key={i} className="inline">
                   {entry.translated && entry.lang && (
-                    <span className="mr-0.5 inline-block translate-y-[-1px] rounded border border-accent/30 bg-accent/[0.08] px-1 py-0.5 align-middle font-mono text-[7px] uppercase tracking-widest text-accent/85">
+                    <span className="mr-0.5 inline-block translate-y-[-1px] rounded-sharp border border-accent/30 bg-accent/[0.08] px-1 py-0.5 align-middle font-mono text-[7px] uppercase tracking-widest text-accent">
                       ↻ {entry.lang}
                     </span>
                   )}
-                  {entry.text}{' '}
+                  <span className="text-light">{entry.text}</span>{' '}
                 </span>
               ))}
               {partial && (
@@ -212,7 +214,9 @@ export function PopupOverlay() {
             </span>
           )}
           {showResponse && (
-            <ResponseInline text={response} streaming={streaming} />
+            <span className="font-sans text-[11.5px] text-light">
+              <ResponseInline text={response} streaming={streaming} />
+            </span>
           )}
         </div>
       </div>
@@ -230,9 +234,9 @@ function IdleIcon({
   status: StatusKind;
 }) {
   const ringColor =
-    status === 'listening' ? 'bg-live/45'
-    : status === 'processing' ? 'bg-accent/45'
-    : 'bg-faint/30';
+    status === 'listening'    ? 'bg-live/40'
+    : status === 'processing' ? 'bg-accent/40'
+    : 'bg-muted/25';
 
   return (
     <div className="drag flex h-full w-full items-center justify-center">
@@ -241,25 +245,25 @@ function IdleIcon({
         onClick={() => auris.showMainWindow()}
         aria-label="Abrir Auris"
         title="Abrir Auris"
-        className="no-drag relative grid h-12 w-12 place-items-center rounded-full bg-bg/85 ring-1 ring-white/[0.06] shadow-pop backdrop-blur-md transition-all hover:bg-bg hover:ring-white/[0.12]"
+        className="no-drag relative grid h-12 w-12 place-items-center rounded-sharp border border-border bg-bg shadow-pop transition-colors hover:border-subtle/40"
       >
         {animate && (
           <>
             <span
-              className={`absolute inset-0 rounded-full ${ringColor} animate-sound-wave pointer-events-none`}
+              className={`absolute inset-0 rounded-sharp ${ringColor} animate-sound-wave pointer-events-none`}
               style={{ animationDelay: '0s' }}
             />
             <span
-              className={`absolute inset-0 rounded-full ${ringColor} animate-sound-wave pointer-events-none`}
+              className={`absolute inset-0 rounded-sharp ${ringColor} animate-sound-wave pointer-events-none`}
               style={{ animationDelay: '0.8s' }}
             />
             <span
-              className={`absolute inset-0 rounded-full ${ringColor} animate-sound-wave pointer-events-none`}
+              className={`absolute inset-0 rounded-sharp ${ringColor} animate-sound-wave pointer-events-none`}
               style={{ animationDelay: '1.6s' }}
             />
           </>
         )}
-        <AurisIconMark className="relative h-[26px] w-[26px]" alive={animate} />
+        <AurisIconMark className="relative h-[28px] w-[28px]" alive={animate} />
       </button>
     </div>
   );
@@ -267,16 +271,21 @@ function IdleIcon({
 
 function DotStatus({ status }: { status: StatusKind }) {
   const dot =
-    status === 'listening' ? 'bg-live shadow-live-glow' :
-    status === 'processing' ? 'bg-accent shadow-accent-glow' :
-    status === 'error' ? 'bg-danger' :
-    'bg-faint';
+    status === 'listening'    ? 'bg-live shadow-live-glow' :
+    status === 'processing'   ? 'bg-accent' :
+    status === 'error'        ? 'bg-danger' :
+    'bg-muted';
   const animate = status === 'listening' || status === 'processing';
 
   return (
     <span className="flex items-center gap-1.5">
       <span className={`h-1 w-1 rounded-full ${dot} ${animate ? 'animate-breathe' : ''}`} />
-      <span className="font-mono text-[8.5px] uppercase tracking-widest text-muted">
+      <span className={`font-mono text-[8.5px] uppercase tracking-widest ${
+        status === 'listening'  ? 'text-live'
+        : status === 'error'    ? 'text-danger'
+        : status === 'processing' ? 'text-accent'
+        : 'text-subtle'
+      }`}>
         {STATUS_LABEL[status]}
       </span>
     </span>
@@ -311,11 +320,11 @@ function ResponseInline({ text, streaming }: { text: string; streaming: boolean 
     i = close + 2;
   }
   return (
-    <span className="text-text/95">
+    <>
       {parts}
       {streaming && (
         <span className="ml-0.5 inline-block h-[0.85em] w-[1.5px] -translate-y-[0.05em] bg-accent align-middle animate-caret-blink" />
       )}
-    </span>
+    </>
   );
 }

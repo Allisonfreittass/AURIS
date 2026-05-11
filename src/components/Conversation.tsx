@@ -103,11 +103,11 @@ function TimeMarker({ fromTs, toTs }: { fromTs: number; toTs: number }) {
         : `${Math.round(minutes / (60 * 24))} d depois`;
   return (
     <div className="flex items-center gap-3 py-1">
-      <span className="h-px flex-1 bg-white/[0.05]" />
-      <span className="font-mono text-[9px] uppercase tracking-widest text-faint">
+      <span className="h-px flex-1 bg-border" />
+      <span className="font-mono text-[9px] uppercase tracking-widest text-muted">
         {label}
       </span>
-      <span className="h-px flex-1 bg-white/[0.05]" />
+      <span className="h-px flex-1 bg-border" />
     </div>
   );
 }
@@ -127,7 +127,7 @@ function MessageRow({ message }: { message: Message }) {
 function UserMessage({ text }: { text: string }) {
   return (
     <div className="flex justify-end animate-fade-up">
-      <div className="max-w-[85%] rounded-2xl rounded-tr-md border border-white/[0.07] bg-elevated px-3.5 py-2 font-sans text-[13px] leading-[1.55] text-text">
+      <div className="max-w-[85%] rounded-soft border border-border bg-elevated px-3.5 py-2 font-sans text-[13px] leading-[1.55] text-text">
         {text}
       </div>
     </div>
@@ -141,7 +141,7 @@ function DetectedMessage({ text }: { text: string }) {
   return (
     <div className="flex animate-fade-up">
       <div className="flex w-full items-start gap-3">
-        <div className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-live/[0.10] ring-1 ring-live/25">
+        <div className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-sharp border border-live/30 bg-live/[0.08]">
           <svg width="13" height="13" viewBox="0 0 13 13" aria-hidden="true" className="text-live">
             <rect x="5" y="2" width="3" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
             <path
@@ -154,10 +154,10 @@ function DetectedMessage({ text }: { text: string }) {
           </svg>
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1 pt-0.5">
-          <span className="font-mono text-[9px] uppercase tracking-widest text-live/85">
+          <span className="font-mono text-[9px] uppercase tracking-widest text-live/90">
             Detectado no áudio
           </span>
-          <p className="font-serif text-[14px] italic leading-[1.55] text-text/85">
+          <p className="font-sans text-[13.5px] italic font-light leading-[1.6] text-light">
             “{text}”
           </p>
         </div>
@@ -180,34 +180,34 @@ function AurisMessage({
   return (
     <div className="flex items-start gap-3 animate-fade-up">
       {/* avatar */}
-      <div className="relative mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-elevated">
+      <div className="relative mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-sharp border border-border bg-elevated">
         <AurisIconMark className="h-[14px] w-[14px]" alive={streaming} />
         {streaming && (
-          <span className="pointer-events-none absolute inset-0 rounded-lg ring-1 ring-accent/30 animate-breathe" />
+          <span className="pointer-events-none absolute inset-0 rounded-sharp border border-accent/40 animate-breathe" />
         )}
       </div>
 
       {/* content */}
       <div className="flex min-w-0 flex-1 flex-col gap-1 pt-0.5">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[9px] uppercase tracking-widest text-accent/80">
+          <span className="font-mono text-[9px] uppercase tracking-widest text-accent">
             Auris
           </span>
           {isThinking && (
-            <span className="font-mono text-[9px] uppercase tracking-widest text-faint">
+            <span className="font-mono text-[9px] uppercase tracking-widest text-muted">
               · pensando
             </span>
           )}
         </div>
 
         {error && (
-          <div className="rounded-md border border-danger/25 bg-danger/[0.08] px-2.5 py-1.5 font-sans text-[12px] text-danger">
+          <div className="rounded-sharp border border-danger/30 bg-danger/[0.08] px-2.5 py-1.5 font-sans text-[12px] text-danger">
             {error}
           </div>
         )}
 
         {!error && text && (
-          <div className="font-sans text-[13.5px] leading-[1.7] text-text/95">
+          <div className="font-sans text-[13.5px] leading-[1.7] text-light">
             <RenderInline text={text} />
             {streaming && (
               <span className="ml-0.5 inline-block h-[0.95em] w-[1.5px] -translate-y-[0.05em] bg-accent align-middle animate-caret-blink" />
@@ -230,11 +230,11 @@ function AurisMessage({
 function ShimmerBar({ width }: { width: string }) {
   return (
     <span
-      className="block h-2.5 rounded-md"
+      className="block h-2 rounded-sharp"
       style={{
         width,
         background:
-          'linear-gradient(90deg, rgba(251,191,36,0.04) 0%, rgba(251,191,36,0.18) 50%, rgba(251,191,36,0.04) 100%)',
+          'linear-gradient(90deg, rgba(26,108,240,0.04) 0%, rgba(26,108,240,0.20) 50%, rgba(26,108,240,0.04) 100%)',
         backgroundSize: '200% 100%',
         animation: 'shimmer 1.6s linear infinite',
       }}
@@ -242,7 +242,7 @@ function ShimmerBar({ width }: { width: string }) {
   );
 }
 
-/** **bold** → accent-colored text. */
+/** **bold** → accent-colored text (blue). */
 function RenderInline({ text }: { text: string }) {
   const parts: React.ReactNode[] = [];
   let i = 0;
@@ -260,11 +260,7 @@ function RenderInline({ text }: { text: string }) {
       break;
     }
     parts.push(
-      <strong
-        key={key++}
-        className="font-medium text-accent"
-        style={{ textShadow: '0 0 14px rgba(251,191,36,0.25)' }}
-      >
+      <strong key={key++} className="font-medium text-accent">
         {text.slice(next + 2, close)}
       </strong>,
     );

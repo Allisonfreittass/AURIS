@@ -56,10 +56,10 @@ export const AskInput = forwardRef<AskInputHandle, Props>(function AskInput(
   return (
     <div className="no-drag px-4 pb-3 pt-2">
       <div
-        className={`flex items-end gap-2 rounded-2xl border bg-elevated/50 px-3.5 py-2.5 transition-all ${
+        className={`flex items-end gap-2 rounded-soft border bg-surface px-3.5 py-2.5 transition-colors ${
           focused
-            ? 'border-accent/40 shadow-accent-glow bg-elevated/80'
-            : 'border-white/[0.06] hover:border-white/[0.12]'
+            ? 'border-accent/50'
+            : 'border-border hover:border-subtle/40'
         }`}
       >
         <textarea
@@ -72,7 +72,7 @@ export const AskInput = forwardRef<AskInputHandle, Props>(function AskInput(
           onBlur={() => setFocused(false)}
           placeholder="Pergunte ao Auris…"
           disabled={busy}
-          className="flex-1 resize-none border-none bg-transparent font-sans text-[13.5px] leading-[1.5] text-text placeholder:text-faint focus:outline-none disabled:opacity-50"
+          className="flex-1 resize-none border-none bg-transparent font-sans text-[13.5px] leading-[1.5] text-text placeholder:text-muted focus:outline-none disabled:opacity-50"
         />
         <button
           onClick={busy ? () => auris.cancelAsk() : submit}
@@ -81,15 +81,15 @@ export const AskInput = forwardRef<AskInputHandle, Props>(function AskInput(
           aria-label={busy ? 'Parar' : 'Enviar'}
           className={
             busy
-              ? 'shrink-0 grid h-8 w-8 place-items-center rounded-lg bg-danger/15 text-danger transition-colors hover:bg-danger/25'
+              ? 'shrink-0 grid h-8 w-8 place-items-center rounded-sharp border border-danger/30 bg-danger/[0.10] text-danger transition-colors hover:bg-danger/[0.18]'
               : canSubmit
-                ? 'shrink-0 grid h-8 w-8 place-items-center rounded-lg bg-accent text-accent-ink shadow-accent-glow transition-all hover:bg-accent-bright'
-                : 'shrink-0 grid h-8 w-8 place-items-center rounded-lg bg-white/[0.04] text-faint disabled:cursor-not-allowed'
+                ? 'shrink-0 grid h-8 w-8 place-items-center rounded-sharp bg-accent text-accent-ink transition-colors hover:bg-accent-bright'
+                : 'shrink-0 grid h-8 w-8 place-items-center rounded-sharp border border-border bg-transparent text-muted disabled:cursor-not-allowed'
           }
         >
           {busy ? (
             <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-              <rect x="2" y="2" width="6" height="6" rx="1.2" fill="currentColor" />
+              <rect x="2" y="2" width="6" height="6" rx="1" fill="currentColor" />
             </svg>
           ) : (
             <svg width="13" height="13" viewBox="0 0 13 13" aria-hidden="true">
@@ -105,7 +105,7 @@ export const AskInput = forwardRef<AskInputHandle, Props>(function AskInput(
           )}
         </button>
       </div>
-      <div className="mt-2 flex items-center justify-between px-1 font-mono text-[9px] uppercase tracking-widest text-faint/60">
+      <div className="mt-2 flex items-center justify-between px-1 font-mono text-[9px] uppercase tracking-widest text-muted">
         <span>↵ enviar · ⇧ ↵ nova linha</span>
         <span>{value.length > 0 ? `${value.length} caracteres` : ''}</span>
       </div>

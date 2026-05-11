@@ -6,6 +6,11 @@ release/
 *.log
 .DS_Store
 
+# Wrangler local state — miniflare simulator caches R2 blobs locally,
+# easily 100MB+ which trips GitHub's file size limit.
+.wrangler/
+landing/.wrangler/
+
 # Local secrets — never commit
 .env
 .env.local

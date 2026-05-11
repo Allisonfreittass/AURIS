@@ -30,8 +30,8 @@ export function ModeToggle({ mode, onChange, variant = 'topbar' }: Props) {
         aria-label={isAuto ? 'Desativar modo auto' : 'Ativar modo auto'}
         className={
           isAuto
-            ? 'flex items-center gap-1.5 rounded-md border border-live/40 bg-live/[0.08] px-2 py-1 font-mono text-[9.5px] uppercase tracking-widest text-live transition-colors hover:bg-live/[0.14]'
-            : 'flex items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.02] px-2 py-1 font-mono text-[9.5px] uppercase tracking-widest text-muted transition-colors hover:border-white/[0.15] hover:text-text'
+            ? 'flex items-center gap-1.5 rounded-sharp border border-live/40 bg-live/[0.08] px-2 py-1 font-mono text-[9.5px] uppercase tracking-widest text-live transition-colors hover:bg-live/[0.14]'
+            : 'flex items-center gap-1.5 rounded-sharp border border-border bg-transparent px-2 py-1 font-mono text-[9.5px] uppercase tracking-widest text-subtle transition-colors hover:border-subtle hover:text-text'
         }
       >
         <SignalIcon active={isAuto} />
@@ -42,7 +42,7 @@ export function ModeToggle({ mode, onChange, variant = 'topbar' }: Props) {
 
   // Pill variant (used in EmptyState).
   return (
-    <div className="inline-flex items-center gap-1 rounded-full border border-white/[0.07] bg-elevated/50 p-1">
+    <div className="inline-flex items-center gap-px rounded-sharp border border-border bg-surface p-0.5">
       <PillButton active={!isAuto} onClick={() => onChange('manual')}>
         Manual
       </PillButton>
@@ -69,8 +69,8 @@ function PillButton({
       onClick={onClick}
       className={
         active
-          ? 'flex items-center gap-1.5 rounded-full bg-text/[0.07] px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-text shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset]'
-          : 'flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-muted transition-colors hover:text-text'
+          ? 'flex items-center gap-1.5 rounded-sharp bg-elevated px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-text'
+          : 'flex items-center gap-1.5 rounded-sharp px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-subtle transition-colors hover:text-text'
       }
     >
       {children}

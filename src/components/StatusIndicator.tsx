@@ -14,12 +14,12 @@ const LABELS: Record<StatusKind, string> = {
 };
 
 const STYLES: Record<StatusKind, { dot: string; text: string; ring?: string }> = {
-  idle:         { dot: 'bg-faint',      text: 'text-muted' },
-  listening:    { dot: 'bg-live shadow-live-glow', text: 'text-live', ring: 'bg-live/40' },
-  processing:   { dot: 'bg-accent shadow-accent-glow', text: 'text-accent', ring: 'bg-accent/40' },
-  paused:       { dot: 'bg-faint',      text: 'text-muted' },
-  reconnecting: { dot: 'bg-accent',     text: 'text-accent' },
-  error:        { dot: 'bg-danger',     text: 'text-danger' },
+  idle:         { dot: 'bg-muted',                 text: 'text-subtle' },
+  listening:    { dot: 'bg-live shadow-live-glow', text: 'text-live',   ring: 'bg-live/40' },
+  processing:   { dot: 'bg-accent',                text: 'text-accent', ring: 'bg-accent/40' },
+  paused:       { dot: 'bg-muted',                 text: 'text-subtle' },
+  reconnecting: { dot: 'bg-accent',                text: 'text-accent' },
+  error:        { dot: 'bg-danger',                text: 'text-danger' },
 };
 
 export function StatusIndicator({ status }: Props) {

@@ -17,6 +17,10 @@
     -moz-osx-font-smoothing: grayscale;
     overflow: hidden;
     user-select: none;
+    /* Tells Chromium to render native controls (select dropdown, autofill
+       hints, scrollbar fallback) in dark mode instead of the light default,
+       which clashed badly with our palette. */
+    color-scheme: dark;
   }
 
   /* The popup window is transparent + frameless — its rounded panel is
@@ -27,24 +31,28 @@
     background: transparent;
   }
 
-  /* Selection color matches the warm accent. */
+  /* Selection — soft blue tint that matches the brand accent. */
   ::selection {
-    background: rgba(251, 191, 36, 0.28);
+    background: rgba(26, 108, 240, 0.28);
+    color: theme('colors.text');
+  }
+
+  /* Native <select> dropdown — Chromium on Windows ignores `color-scheme`
+     in some configurations, so paint the options directly. The closed
+     control inherits page styles already (font, color); only the popup
+     list needs this fallback. */
+  select option {
+    background-color: theme('colors.surface');
     color: theme('colors.text');
   }
 }
 
 @layer components {
-  /* Soft scrollbar for content panes. */
+  /* Scrollable panes — hairline-thin scrollbar, no extra chrome. */
   .auris-scroll {
-    /* Wheel events from elements with `user-select: none` ancestors can
-       behave inconsistently on some Windows mouse drivers. Force pointer
-       events on and allow text selection inside scroll panes so the user
-       can read back & highlight transcripts comfortably. */
     pointer-events: auto;
     user-select: text;
     -webkit-user-select: text;
-    /* Prevent rubber-banding from propagating to the parent window. */
     overscroll-behavior: contain;
   }
   .auris-scroll::-webkit-scrollbar {
@@ -56,49 +64,60 @@
   }
   .auris-scroll::-webkit-scrollbar-thumb {
     background: theme('colors.border');
-    border-radius: 3px;
+    border-radius: 2px;
     transition: background-color 0.2s;
   }
   .auris-scroll::-webkit-scrollbar-thumb:hover {
-    background: theme('colors.muted');
+    background: theme('colors.subtle');
   }
 
-  /* Eyebrow label — small uppercase tracker used everywhere for section labels. */
+  /* Eyebrow label — JetBrains Mono, tracked-out, used for section labels. */
   .eyebrow {
     font-family: theme('fontFamily.mono');
     font-size: 9px;
+    font-weight: 400;
     text-transform: uppercase;
     letter-spacing: theme('letterSpacing.eyebrow');
-    color: theme('colors.faint');
-    font-weight: 400;
+    color: theme('colors.muted');
   }
   .eyebrow-accent {
     color: theme('colors.accent.DEFAULT');
-    opacity: 0.85;
+  }
+  .eyebrow-live {
+    color: theme('colors.live.DEFAULT');
   }
 
-  /* Glass surfaces — stacked rgba whites + blur for soft depth without borders. */
-  .glass {
-    background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01));
-    backdrop-filter: blur(12px) saturate(140%);
-    -webkit-backdrop-filter: blur(12px) saturate(140%);
+  /* Hairline-bordered solid surfaces. Replaces the old .glass blur look —
+     the new system uses crisp single-pixel rules instead. Keeping the
+     legacy class names so component refactors can land incrementally. */
+  .glass,
+  .panel {
+    background: theme('colors.surface');
+    border: 1px solid theme('colors.border');
+    border-radius: theme('borderRadius.soft');
   }
   .glass-strong {
-    background: linear-gradient(180deg, rgba(20,24,33,0.9), rgba(15,18,24,0.85));
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    background: theme('colors.bg');
+    border: 1px solid theme('colors.border');
+    border-radius: theme('borderRadius.soft');
   }
 
-  /* Soft elevated card surface used inside the main overlay. */
-  .panel {
-    background: linear-gradient(180deg, rgba(255,255,255,0.022), rgba(255,255,255,0.005));
-    box-shadow:
-      0 1px 0 rgba(255,255,255,0.04) inset,
-      0 0 0 1px rgba(255,255,255,0.04);
-    border-radius: 12px;
+  /* Decorative grid overlay — optional, opt-in via .grid-bg on a container.
+     Mirrors the brand identity's 64px grid. */
+  .grid-bg {
+    background-image:
+      linear-gradient(theme('colors.border') 1px, transparent 1px),
+      linear-gradient(90deg, theme('colors.border') 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+  .grid-bg-faint {
+    background-image:
+      linear-gradient(rgba(37, 45, 56, 0.4) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(37, 45, 56, 0.4) 1px, transparent 1px);
+    background-size: 64px 64px;
   }
 
-  /* Streaming text baseline + caret styling. */
+  /* Streaming text caret styling. */
   .stream-caret::after {
     content: '';
     display: inline-block;

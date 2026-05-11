@@ -59,31 +59,22 @@ export function TranscriptStream({ status, history, partialLine, expanded }: Pro
   }, [history, partialLine]);
 
   const dotClass =
-    status === 'listening'  ? 'bg-live shadow-live-glow'
-    : status === 'processing' ? 'bg-accent shadow-accent-glow'
+    status === 'listening'    ? 'bg-live shadow-live-glow'
+    : status === 'processing' ? 'bg-accent'
     : status === 'error'      ? 'bg-danger'
-    : 'bg-faint';
+    : 'bg-muted';
   const animate = status === 'listening' || status === 'processing';
 
   return (
     <section className={`flex flex-col gap-1.5 ${expanded ? 'flex-1 min-h-0' : ''}`}>
-      {/* Header: status + lang badge of latest entry */}
+      {/* Header: status + source label */}
       <div className="flex items-center gap-2.5 px-4 pt-2 text-[12px]">
-        <span className="relative grid h-3 w-3 shrink-0 place-items-center">
-          {animate && (
-            <span
-              className={`absolute inset-0 rounded-full opacity-30 ${
-                status === 'listening' ? 'bg-live' : 'bg-accent'
-              } animate-breathe`}
-            />
-          )}
-          <span className={`relative h-1.5 w-1.5 rounded-full ${dotClass}`} />
-        </span>
-        <span className="font-mono text-[9px] uppercase tracking-widest text-muted shrink-0">
+        <span className={`h-1.5 w-1.5 rounded-full ${dotClass} ${animate ? 'animate-breathe' : ''}`} />
+        <span className="font-mono text-[9px] uppercase tracking-widest text-subtle shrink-0">
           {STATUS_HINT[status]}
         </span>
-        <span className="h-3 w-px bg-white/[0.08] shrink-0" />
-        <span className="font-mono text-[8.5px] uppercase tracking-widest text-faint">
+        <span className="h-3 w-px bg-border shrink-0" />
+        <span className="font-mono text-[8.5px] uppercase tracking-widest text-muted">
           transcrição · áudio do sistema
         </span>
       </div>
@@ -91,18 +82,18 @@ export function TranscriptStream({ status, history, partialLine, expanded }: Pro
       {/* Body: scrolling stream of finals + current partial */}
       <div
         ref={scrollRef}
-        className={`auris-scroll overflow-y-auto px-4 pb-2 font-sans text-[12.5px] leading-[1.65] text-text/75 ${
+        className={`auris-scroll overflow-y-auto px-4 pb-2 font-mono text-[11.5px] leading-[1.7] text-subtle ${
           expanded ? 'flex-1 min-h-0' : 'max-h-[140px]'
         }`}
       >
         {history.map((entry, i) => (
           <span key={i} className="inline">
             {entry.translated && entry.lang && (
-              <span className="mr-1 inline-block translate-y-[-1px] rounded border border-accent/30 bg-accent/[0.08] px-1 py-0.5 align-middle font-mono text-[7.5px] uppercase tracking-widest text-accent/85">
+              <span className="mr-1 inline-block translate-y-[-1px] rounded-sharp border border-accent/30 bg-accent/[0.08] px-1 py-0.5 align-middle font-mono text-[7.5px] uppercase tracking-widest text-accent">
                 ↻ {entry.lang}
               </span>
             )}
-            {entry.text}{' '}
+            <span className="text-light">{entry.text}</span>{' '}
           </span>
         ))}
         {partialLine && (

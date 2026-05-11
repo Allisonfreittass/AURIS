@@ -52,7 +52,7 @@ function MainApp() {
   if (phase === 'no-bridge') {
     return (
       <div className="flex h-full w-full items-center justify-center bg-bg p-6">
-        <div className="max-w-[420px] rounded-lg border border-danger/25 bg-danger/[0.08] px-4 py-3 font-sans text-[12px] leading-relaxed text-danger">
+        <div className="max-w-[420px] rounded-sharp border border-danger/30 bg-danger/[0.08] px-4 py-3 font-sans text-[12px] leading-relaxed text-danger">
           Falha ao inicializar a ponte segura entre o renderer e o processo
           principal (preload). Reinicie o aplicativo.
         </div>

@@ -1,6 +1,6 @@
 {
   "name": "auris",
-  "version": "0.2.0-beta",
+  "version": "0.3.0-beta",
   "private": true,
   "description": "Auris — assistente em tempo real que escuta junto com você.",
   "author": "Auris",
@@ -99,9 +99,8 @@
       "installerHeaderIcon": "resources/icon.ico"
     },
     "publish": {
-      "provider": "github",
-      "owner": "Allisonfreittass",
-      "repo": "AURIS"
+      "provider": "generic",
+      "url": "https://pub-ce581fb3ec254955850622d3e9bd589e.r2.dev"
     }
   }
 }

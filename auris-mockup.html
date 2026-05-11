@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auris — Corporate Brand Identity</title>
+<link href="https://fonts.googleapis.com/css2?family=Neue+Haas+Grotesk+Display+Pro:wght@400;500&family=Epilogue:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+–ink:     #0a0c0f;
+–ink-2:   #161a20;
+–ink-3:   #1f2530;
+–rule:    #252d38;
+–mid:     #3a4555;
+–muted:   #5a6880;
+–subtle:  #8a9ab0;
+–light:   #c8d4e0;
+–paper:   #f0f3f7;
+–white:   #ffffff;
+–blue:    #1a6cf0;
+–blue-d:  #0f4ab0;
+–blue-l:  #e8f0fc;
+–teal:    #0db8a0;
+–teal-d:  #088a78;
+}
+
+body {
+background: var(–ink);
+color: var(–white);
+font-family: ‘Epilogue’, sans-serif;
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 80px 24px 120px;
+gap: 0;
+}
+
+/* ── GRID OVERLAY ── */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image:
+linear-gradient(var(–rule) 1px, transparent 1px),
+linear-gradient(90deg, var(–rule) 1px, transparent 1px);
+background-size: 64px 64px;
+opacity: 0.18;
+pointer-events: none;
+z-index: 0;
+}
+
+.container {
+width: 100%;
+max-width: 880px;
+position: relative;
+z-index: 1;
+display: flex;
+flex-direction: column;
+gap: 0;
+}
+
+/* ── SECTION HEADER ── */
+.sec-label {
+font-size: 10px;
+font-weight: 500;
+letter-spacing: 4px;
+text-transform: uppercase;
+color: var(–muted);
+padding: 40px 0 20px;
+border-top: 1px solid var(–rule);
+display: flex;
+align-items: center;
+gap: 12px;
+}
+.sec-label::after {
+content: ‘’;
+flex: 1;
+height: 1px;
+background: var(–rule);
+}
+.sec-label:first-child { border-top: none; padding-top: 0; }
+
+/* ══════════════════════════════
+HERO — LOGO PRINCIPAL
+══════════════════════════════ */
+.hero {
+padding: 80px 0 72px;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+gap: 0;
+border-bottom: 1px solid var(–rule);
+}
+
+.logo-lockup {
+display: flex;
+align-items: center;
+gap: 20px;
+}
+
+/* Mark — geometric ear abstraction */
+.mark {
+width: 56px;
+height: 56px;
+flex-shrink: 0;
+}
+
+.wordmark-text {
+font-family: ‘Epilogue’, sans-serif;
+font-weight: 600;
+font-size: 48px;
+letter-spacing: -1px;
+color: var(–white);
+line-height: 1;
+}
+.wordmark-text .dot {
+color: var(–blue);
+}
+
+.tagline-row {
+margin-top: 16px;
+padding-top: 16px;
+border-top: 1px solid var(–rule);
+display: flex;
+align-items: center;
+gap: 24px;
+}
+.tagline-text {
+font-size: 12px;
+font-weight: 400;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–muted);
+}
+.tag-pill {
+font-size: 10px;
+font-weight: 500;
+letter-spacing: 1.5px;
+text-transform: uppercase;
+color: var(–teal);
+border: 1px solid var(–teal-d);
+padding: 3px 10px;
+border-radius: 2px;
+background: rgba(13,184,160,0.06);
+}
+
+/* ══════════════════════════════
+LOGO VARIATIONS
+══════════════════════════════ */
+.variations-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 1px;
+background: var(–rule);
+margin-bottom: 1px;
+}
+
+.var-cell {
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+justify-content: space-between;
+padding: 32px 28px;
+min-height: 180px;
+position: relative;
+}
+
+.var-num {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 10px;
+color: var(–muted);
+letter-spacing: 1px;
+position: absolute;
+top: 16px;
+right: 20px;
+}
+
+/* Dark */
+.var-dark { background: var(–ink-2); }
+
+/* Light */
+.var-light { background: var(–paper); }
+.var-light .wordmark-sm { color: var(–ink); }
+.var-light .var-num { color: #94a3b8; }
+
+/* Blue */
+.var-blue { background: var(–blue); }
+.var-blue .var-num { color: rgba(255,255,255,0.4); }
+
+.logo-sm {
+display: flex;
+align-items: center;
+gap: 10px;
+margin-top: auto;
+}
+.wordmark-sm {
+font-family: ‘Epilogue’, sans-serif;
+font-weight: 600;
+font-size: 22px;
+letter-spacing: -0.5px;
+color: var(–white);
+line-height: 1;
+}
+.wordmark-sm .dot { color: var(–blue); }
+.var-blue .wordmark-sm .dot { color: rgba(255,255,255,0.6); }
+.var-light .wordmark-sm .dot { color: var(–blue); }
+
+/* ══════════════════════════════
+OVERLAY MOCKUP
+══════════════════════════════ */
+.mockup-wrap {
+background: var(–ink-2);
+border: 1px solid var(–rule);
+padding: 48px;
+display: flex;
+justify-content: center;
+align-items: center;
+}
+
+.overlay {
+width: 100%;
+max-width: 580px;
+background: rgba(10,12,15,0.92);
+border: 1px solid var(–rule);
+border-radius: 4px;
+overflow: hidden;
+box-shadow:
+0 0 0 1px rgba(26,108,240,0.1),
+0 24px 64px rgba(0,0,0,0.7),
+0 4px 16px rgba(0,0,0,0.5);
+}
+
+.ov-bar {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 10px 16px;
+background: var(–ink-3);
+border-bottom: 1px solid var(–rule);
+}
+
+.ov-brand {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.ov-wordmark {
+font-family: ‘Epilogue’, sans-serif;
+font-weight: 600;
+font-size: 13px;
+letter-spacing: 0px;
+color: var(–white);
+}
+.ov-wordmark .dot { color: var(–blue); }
+
+.ov-status {
+display: flex;
+align-items: center;
+gap: 6px;
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 10px;
+letter-spacing: 1px;
+color: var(–teal);
+}
+.ov-dot {
+width: 5px;
+height: 5px;
+border-radius: 50%;
+background: var(–teal);
+box-shadow: 0 0 6px var(–teal);
+animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink {
+0%,100% { opacity: 1; }
+50% { opacity: 0.3; }
+}
+
+.ov-controls {
+display: flex;
+align-items: center;
+gap: 12px;
+}
+.ov-btn {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 9px;
+letter-spacing: 1.5px;
+text-transform: uppercase;
+color: var(–muted);
+cursor: pointer;
+padding: 3px 8px;
+border: 1px solid var(–rule);
+border-radius: 2px;
+background: transparent;
+}
+.ov-btn.primary {
+color: var(–blue);
+border-color: rgba(26,108,240,0.3);
+background: rgba(26,108,240,0.08);
+}
+
+.ov-body {
+padding: 16px;
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+
+.ov-section-label {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 9px;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–muted);
+margin-bottom: 6px;
+}
+
+.ov-transcript {
+background: rgba(255,255,255,0.02);
+border: 1px solid var(–rule);
+border-radius: 2px;
+padding: 12px 14px;
+}
+.ov-transcript-text {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 11px;
+line-height: 1.7;
+color: var(–subtle);
+}
+.ov-transcript-text em {
+color: var(–light);
+font-style: normal;
+}
+
+.ov-response {
+background: rgba(26,108,240,0.04);
+border: 1px solid rgba(26,108,240,0.15);
+border-radius: 2px;
+padding: 12px 14px;
+}
+.ov-response-text {
+font-size: 12px;
+line-height: 1.7;
+color: var(–light);
+font-family: ‘Epilogue’, sans-serif;
+font-weight: 400;
+}
+.ov-response-text strong {
+color: #6aadff;
+font-weight: 500;
+}
+
+.ov-footer {
+padding: 8px 16px;
+border-top: 1px solid var(–rule);
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+.ov-footer-text {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 9px;
+color: var(–mid);
+letter-spacing: 1px;
+}
+
+/* ══════════════════════════════
+COLOR SYSTEM
+══════════════════════════════ */
+.color-grid {
+display: grid;
+grid-template-columns: repeat(6, 1fr);
+gap: 1px;
+background: var(–rule);
+}
+
+.color-swatch {
+aspect-ratio: 1;
+display: flex;
+flex-direction: column;
+justify-content: flex-end;
+padding: 10px;
+position: relative;
+}
+.color-swatch-label {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 9px;
+letter-spacing: 0.5px;
+opacity: 0.55;
+line-height: 1.5;
+}
+
+/* ══════════════════════════════
+TYPOGRAPHY SYSTEM
+══════════════════════════════ */
+.type-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 1px;
+background: var(–rule);
+}
+
+.type-cell {
+background: var(–ink-2);
+padding: 32px 28px;
+display: flex;
+flex-direction: column;
+gap: 12px;
+}
+
+.type-meta {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 9px;
+letter-spacing: 2px;
+color: var(–muted);
+text-transform: uppercase;
+}
+
+.type-display {
+font-family: ‘Epilogue’, sans-serif;
+font-weight: 600;
+font-size: 42px;
+letter-spacing: -1px;
+color: var(–white);
+line-height: 1;
+}
+
+.type-body {
+font-family: ‘Epilogue’, sans-serif;
+font-weight: 400;
+font-size: 14px;
+line-height: 1.6;
+color: var(–subtle);
+}
+
+.type-mono-sample {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 13px;
+color: var(–teal);
+line-height: 1.6;
+}
+
+/* ══════════════════════════════
+BRAND RULES
+══════════════════════════════ */
+.rules-grid {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 1px;
+background: var(–rule);
+}
+
+.rule-cell {
+background: var(–ink-2);
+padding: 28px;
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+
+.rule-title {
+font-size: 11px;
+font-weight: 500;
+letter-spacing: 1px;
+text-transform: uppercase;
+color: var(–light);
+}
+
+.rule-body {
+font-size: 12px;
+line-height: 1.6;
+color: var(–muted);
+font-family: ‘JetBrains Mono’, monospace;
+}
+
+.rule-cell.do .rule-title::before { content: ’✓  ’; color: var(–teal); }
+.rule-cell.dont .rule-title::before { content: ’✕  ’; color: #f06060; }
+
+/* ══════════════════════════════
+FOOTER
+══════════════════════════════ */
+.brand-footer {
+border-top: 1px solid var(–rule);
+padding-top: 32px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-top: 0;
+}
+
+.footer-logo {
+font-family: ‘Epilogue’, sans-serif;
+font-weight: 600;
+font-size: 16px;
+color: var(–white);
+letter-spacing: -0.3px;
+}
+.footer-logo .dot { color: var(–blue); }
+
+.footer-meta {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 10px;
+color: var(–muted);
+letter-spacing: 1px;
+text-align: right;
+line-height: 1.6;
+}
+
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ── HERO ── -->
+
+  <div class="hero">
+    <div class="logo-lockup">
+
+```
+  <!-- Mark: geometric abstraction of a sound wave / ear canal -->
+  <svg class="mark" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="56" height="56" fill="#1a6cf010" rx="4"/>
+    <!-- Vertical bars — waveform / equalizer -->
+    <rect x="10" y="24" width="4" height="20" rx="1" fill="#1a6cf0" opacity="0.4"/>
+    <rect x="17" y="16" width="4" height="28" rx="1" fill="#1a6cf0" opacity="0.65"/>
+    <rect x="24" y="10" width="4" height="36" rx="1" fill="#1a6cf0"/>
+    <rect x="31" y="16" width="4" height="28" rx="1" fill="#0db8a0" opacity="0.8"/>
+    <rect x="38" y="22" width="4" height="22" rx="1" fill="#0db8a0" opacity="0.5"/>
+    <!-- Bottom line -->
+    <line x1="8" y1="48" x2="48" y2="48" stroke="#252d38" stroke-width="1"/>
+  </svg>
+
+  <div class="wordmark-text">Auris<span class="dot">.</span></div>
+</div>
+
+<div class="tagline-row">
+  <span class="tagline-text">Real-time AI Assistant</span>
+  <span class="tag-pill">Beta</span>
+  <span class="tag-pill" style="color:var(--blue);border-color:rgba(26,108,240,0.3);background:rgba(26,108,240,0.06);">Windows</span>
+</div>
+```
+
+  </div>
+
+  <!-- ── VARIATIONS ── -->
+
+  <div class="sec-label">01 — Variações do Logotipo</div>
+  <div class="variations-grid">
+
+```
+<!-- Dark -->
+<div class="var-cell var-dark">
+  <span class="var-num">01 / Dark</span>
+  <div class="logo-sm">
+    <svg width="26" height="26" viewBox="0 0 56 56" fill="none">
+      <rect x="8" y="22" width="4" height="22" rx="1" fill="#1a6cf0" opacity="0.4"/>
+      <rect x="15" y="14" width="4" height="30" rx="1" fill="#1a6cf0" opacity="0.65"/>
+      <rect x="22" y="8"  width="4" height="38" rx="1" fill="#1a6cf0"/>
+      <rect x="29" y="14" width="4" height="30" rx="1" fill="#0db8a0" opacity="0.8"/>
+      <rect x="36" y="20" width="4" height="24" rx="1" fill="#0db8a0" opacity="0.5"/>
+    </svg>
+    <span class="wordmark-sm">Auris<span class="dot">.</span></span>
+  </div>
+</div>
+
+<!-- Light -->
+<div class="var-cell var-light">
+  <span class="var-num">02 / Light</span>
+  <div class="logo-sm">
+    <svg width="26" height="26" viewBox="0 0 56 56" fill="none">
+      <rect x="8" y="22" width="4" height="22" rx="1" fill="#1a6cf0" opacity="0.5"/>
+      <rect x="15" y="14" width="4" height="30" rx="1" fill="#1a6cf0" opacity="0.75"/>
+      <rect x="22" y="8"  width="4" height="38" rx="1" fill="#1a6cf0"/>
+      <rect x="29" y="14" width="4" height="30" rx="1" fill="#0db8a0" opacity="0.9"/>
+      <rect x="36" y="20" width="4" height="24" rx="1" fill="#0db8a0" opacity="0.6"/>
+    </svg>
+    <span class="wordmark-sm" style="color:#0a0c0f;">Auris<span style="color:#1a6cf0;">.</span></span>
+  </div>
+</div>
+
+<!-- Blue -->
+<div class="var-cell var-blue">
+  <span class="var-num">03 / Brand</span>
+  <div class="logo-sm">
+    <svg width="26" height="26" viewBox="0 0 56 56" fill="none">
+      <rect x="8" y="22" width="4" height="22" rx="1" fill="white" opacity="0.3"/>
+      <rect x="15" y="14" width="4" height="30" rx="1" fill="white" opacity="0.55"/>
+      <rect x="22" y="8"  width="4" height="38" rx="1" fill="white" opacity="0.9"/>
+      <rect x="29" y="14" width="4" height="30" rx="1" fill="white" opacity="0.6"/>
+      <rect x="36" y="20" width="4" height="24" rx="1" fill="white" opacity="0.35"/>
+    </svg>
+    <span class="wordmark-sm">Auris<span style="color:rgba(255,255,255,0.5);">.</span></span>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- ── OVERLAY MOCKUP ── -->
+
+  <div class="sec-label">02 — Interface do Produto</div>
+  <div class="mockup-wrap">
+    <div class="overlay">
+      <div class="ov-bar">
+        <div class="ov-brand">
+          <svg width="16" height="16" viewBox="0 0 56 56" fill="none">
+            <rect x="8" y="22" width="4" height="22" rx="1" fill="#1a6cf0" opacity="0.4"/>
+            <rect x="15" y="14" width="4" height="30" rx="1" fill="#1a6cf0" opacity="0.65"/>
+            <rect x="22" y="8"  width="4" height="38" rx="1" fill="#1a6cf0"/>
+            <rect x="29" y="14" width="4" height="30" rx="1" fill="#0db8a0" opacity="0.8"/>
+            <rect x="36" y="20" width="4" height="24" rx="1" fill="#0db8a0" opacity="0.5"/>
+          </svg>
+          <span class="ov-wordmark">Auris<span class="dot">.</span></span>
+        </div>
+        <div class="ov-status">
+          <div class="ov-dot"></div>
+          ouvindo
+        </div>
+        <div class="ov-controls">
+          <span class="ov-btn">pausar</span>
+          <span class="ov-btn primary">▶ ativo</span>
+          <span class="ov-btn">—</span>
+        </div>
+      </div>
+
+```
+  <div class="ov-body">
+    <div class="ov-transcript">
+      <div class="ov-section-label">Transcrição</div>
+      <div class="ov-transcript-text">
+        ...e como funciona o protocolo de consenso em sistemas distribuídos? <em>Qual seria a melhor abordagem pra esse caso?</em>
+      </div>
+    </div>
+
+    <div class="ov-response">
+      <div class="ov-section-label" style="color:rgba(26,108,240,0.6);">Sugestão Auris</div>
+      <div class="ov-response-text">
+        A abordagem mais robusta é o algoritmo <strong>Raft</strong> — mais legível que Paxos e com liderança explícita. Para alta disponibilidade, configure um quórum de 3 ou 5 nós. <strong>etcd</strong> e <strong>Consul</strong> são implementações de produção maduras baseadas nele.
+      </div>
+    </div>
+  </div>
+
+  <div class="ov-footer">
+    <span class="ov-footer-text">claude-sonnet · pt-BR</span>
+    <span class="ov-footer-text">latência 1.4s</span>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- ── COLOR SYSTEM ── -->
+
+  <div class="sec-label">03 — Sistema de Cores</div>
+  <div class="color-grid">
+    <div class="color-swatch" style="background:#0a0c0f;">
+      <span class="color-swatch-label" style="color:#5a6880;">Ink<br/>0a0c0f</span>
+    </div>
+    <div class="color-swatch" style="background:#161a20;">
+      <span class="color-swatch-label" style="color:#5a6880;">Surface<br/>161a20</span>
+    </div>
+    <div class="color-swatch" style="background:#252d38;">
+      <span class="color-swatch-label" style="color:#5a6880;">Rule<br/>252d38</span>
+    </div>
+    <div class="color-swatch" style="background:#1a6cf0;">
+      <span class="color-swatch-label" style="color:rgba(255,255,255,0.5);">Blue<br/>1a6cf0</span>
+    </div>
+    <div class="color-swatch" style="background:#0db8a0;">
+      <span class="color-swatch-label" style="color:rgba(255,255,255,0.5);">Teal<br/>0db8a0</span>
+    </div>
+    <div class="color-swatch" style="background:#f0f3f7;border:1px solid #252d38;">
+      <span class="color-swatch-label" style="color:#8a9ab0;">Paper<br/>f0f3f7</span>
+    </div>
+  </div>
+
+  <!-- ── TYPOGRAPHY ── -->
+
+  <div class="sec-label">04 — Tipografia</div>
+  <div class="type-grid">
+    <div class="type-cell">
+      <span class="type-meta">Display — Epilogue SemiBold</span>
+      <div class="type-display">Auris.</div>
+      <div class="type-body">Assistente de IA em tempo real para reuniões e chamadas profissionais.</div>
+    </div>
+    <div class="type-cell">
+      <span class="type-meta">Mono — JetBrains Mono</span>
+      <div class="type-mono-sample">
+        ouvindo · EN→PT<br/>
+        latência 1.4s<br/>
+        claude-sonnet-4-6<br/>
+        {"type":"transcript"}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BRAND RULES ── -->
+
+  <div class="sec-label">05 — Regras de Uso</div>
+  <div class="rules-grid">
+    <div class="rule-cell do">
+      <div class="rule-title">Use assim</div>
+      <div class="rule-body">
+        Auris. (com ponto)<br/>
+        Fundo escuro ou branco<br/>
+        Azul #1a6cf0 como acento<br/>
+        Epilogue 600 no wordmark
+      </div>
+    </div>
+    <div class="rule-cell dont">
+      <div class="rule-title">Não use assim</div>
+      <div class="rule-body">
+        AURIS (caixa alta isolado)<br/>
+        Fundos coloridos ou gradientes<br/>
+        Outras cores no wordmark<br/>
+        Distorcer proporções do mark
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+
+  <div class="brand-footer">
+    <div class="footer-logo">Auris<span class="dot">.</span></div>
+    <div class="footer-meta">
+      Brand Identity v1.0<br/>
+      Confidencial — uso interno
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

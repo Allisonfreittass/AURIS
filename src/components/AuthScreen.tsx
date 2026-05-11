@@ -41,27 +41,27 @@ export function AuthScreen({ onAuthed }: Props) {
 
   return (
     <div className="drag relative flex h-full w-full items-center justify-center overflow-hidden bg-bg px-6">
-      {/* Background atmospherics — subtle blobs of color blurred behind. */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <span
-          className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-brand-to/10 blur-[80px]"
-        />
-        <span
-          className="absolute -bottom-32 -right-24 h-80 w-80 rounded-full bg-accent/[0.06] blur-[90px]"
-        />
-      </div>
+      {/* Faint grid background — corporate-system identity. */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-30"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(37,45,56,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(37,45,56,0.5) 1px, transparent 1px)',
+          backgroundSize: '64px 64px',
+        }}
+      />
 
       <WindowControls floating />
 
       <div className="no-drag relative w-full max-w-[400px] animate-fade-up">
         {/* Logo + brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <AurisLogo className="h-[68px] w-[68px]" />
+          <AurisLogo className="h-[64px] w-[64px]" />
           <div className="text-center">
-            <div className="font-serif text-[26px] font-light tracking-[0.32em] text-text">
-              A<span className="text-accent">U</span>RIS
+            <div className="font-sans text-[28px] font-semibold tracking-[-0.015em] text-text leading-none">
+              Auris<span className="text-accent">.</span>
             </div>
-            <div className="mt-1 font-mono text-[9px] uppercase tracking-widest text-faint">
+            <div className="mt-2 font-mono text-[9px] uppercase tracking-widest text-muted">
               {isSignup ? 'Criar conta' : 'Entrar'}
             </div>
           </div>
@@ -69,7 +69,7 @@ export function AuthScreen({ onAuthed }: Props) {
 
         <form
           onSubmit={submit}
-          className="panel flex flex-col gap-3.5 px-6 py-6 shadow-card"
+          className="flex flex-col gap-3.5 rounded-soft border border-border bg-surface px-6 py-6"
         >
           <Field
             label="Email"
@@ -95,12 +95,12 @@ export function AuthScreen({ onAuthed }: Props) {
           />
 
           {error && (
-            <div className="rounded-lg border border-danger/25 bg-danger/[0.08] px-3 py-2 font-sans text-[12px] leading-relaxed text-danger">
+            <div className="rounded-sharp border border-danger/30 bg-danger/[0.08] px-3 py-2 font-sans text-[12px] leading-relaxed text-danger">
               {error}
             </div>
           )}
           {info && (
-            <div className="rounded-lg border border-live/25 bg-live/[0.08] px-3 py-2 font-sans text-[12px] leading-relaxed text-live">
+            <div className="rounded-sharp border border-live/30 bg-live/[0.08] px-3 py-2 font-sans text-[12px] leading-relaxed text-live">
               {info}
             </div>
           )}
@@ -108,7 +108,7 @@ export function AuthScreen({ onAuthed }: Props) {
           <button
             type="submit"
             disabled={busy || !email.trim() || !password}
-            className="mt-1 flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 font-sans text-[13px] font-medium text-accent-ink shadow-accent-glow transition-all hover:bg-accent-bright disabled:cursor-not-allowed disabled:bg-white/[0.06] disabled:text-faint disabled:shadow-none"
+            className="mt-1 flex items-center justify-center gap-2 rounded-sharp bg-accent px-4 py-2.5 font-sans text-[13px] font-medium text-accent-ink transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:bg-elevated disabled:text-muted"
           >
             {busy ? 'Aguarde…' : isSignup ? 'Criar conta' : 'Entrar'}
           </button>
@@ -121,13 +121,13 @@ export function AuthScreen({ onAuthed }: Props) {
               setInfo(null);
             }}
             disabled={busy}
-            className="font-sans text-[12px] text-muted transition-colors hover:text-text disabled:opacity-40"
+            className="font-sans text-[12px] text-subtle transition-colors hover:text-text disabled:opacity-40"
           >
             {isSignup ? 'Já tenho conta · Entrar' : 'Ainda não tenho conta · Criar uma'}
           </button>
         </form>
 
-        <p className="mt-4 text-center font-mono text-[9px] uppercase tracking-widest text-faint">
+        <p className="mt-4 text-center font-mono text-[9px] uppercase tracking-widest text-muted">
           beta · uso sem limites
         </p>
       </div>
@@ -152,7 +152,7 @@ function Field({
         {...rest}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-lg border border-white/[0.06] bg-bg/60 px-3 py-2 font-sans text-[13px] text-text placeholder:text-faint transition-all focus:border-accent/40 focus:bg-bg/80 focus:outline-none focus:ring-1 focus:ring-accent/30 disabled:opacity-50"
+        className="rounded-sharp border border-border bg-bg px-3 py-2 font-sans text-[13px] text-text placeholder:text-muted transition-colors focus:border-accent/50 focus:outline-none disabled:opacity-50"
       />
     </label>
   );

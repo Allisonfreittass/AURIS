@@ -39,7 +39,7 @@ export function ConversationToolbar({
 
   return (
     <div className="no-drag flex items-center justify-between gap-2 px-4 pb-1 pt-1">
-      <span className="font-mono text-[9px] uppercase tracking-widest text-faint">
+      <span className="font-mono text-[9px] uppercase tracking-widest text-muted">
         {summary} · ativo
       </span>
       <div className="flex items-center gap-1">
@@ -101,7 +101,7 @@ function ToolbarButton({
       type="button"
       onClick={onClick}
       title={title}
-      className="flex items-center gap-1.5 rounded-md px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted transition-colors hover:bg-white/[0.04] hover:text-text"
+      className="flex items-center gap-1.5 rounded-sharp px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-subtle transition-colors hover:bg-elevated hover:text-text"
     >
       {icon}
       {label}

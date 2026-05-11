@@ -38,8 +38,8 @@ export function ErrorBanner({ audioError, llmError, onRetryAudio, onDismissLlm }
           key={i}
           className={
             it.severity === 'block'
-              ? 'rounded-lg border border-danger/30 bg-danger/[0.08] px-3.5 py-3'
-              : 'rounded-lg border border-accent/30 bg-accent/[0.06] px-3.5 py-3'
+              ? 'rounded-sharp border border-danger/30 bg-danger/[0.08] px-3.5 py-3'
+              : 'rounded-sharp border border-accent/30 bg-accent/[0.06] px-3.5 py-3'
           }
         >
           <div
@@ -51,13 +51,13 @@ export function ErrorBanner({ audioError, llmError, onRetryAudio, onDismissLlm }
           </div>
           <div
             className={`font-sans text-[12.5px] leading-relaxed ${
-              it.severity === 'block' ? 'text-danger' : 'text-accent2'
+              it.severity === 'block' ? 'text-danger' : 'text-light'
             }`}
           >
             {it.body}
           </div>
           {it.hint && (
-            <div className="mt-1.5 font-sans text-[11px] leading-relaxed text-muted">
+            <div className="mt-1.5 font-sans text-[11px] leading-relaxed text-subtle">
               {it.hint}
             </div>
           )}
@@ -65,7 +65,7 @@ export function ErrorBanner({ audioError, llmError, onRetryAudio, onDismissLlm }
             <button
               onClick={it.cta.onClick}
               className={
-                'no-drag mt-2.5 rounded-md border px-3 py-1 font-mono text-[10px] uppercase tracking-widest transition-colors ' +
+                'no-drag mt-2.5 rounded-sharp border px-3 py-1 font-mono text-[10px] uppercase tracking-widest transition-colors ' +
                 (it.severity === 'block'
                   ? 'border-danger/35 bg-danger/10 text-danger hover:bg-danger/18'
                   : 'border-accent/35 bg-accent/10 text-accent hover:bg-accent/18')

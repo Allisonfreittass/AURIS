@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Auris — escute junto com você</title>
+    <meta name="color-scheme" content="dark" />
+    <title>Auris — assistente em tempo real</title>
     <meta
       name="description"
       content="Auris é um assistente desktop que ouve o áudio do seu PC em qualquer idioma, traduz pra português em tempo real e responde perguntas sobre o que você está assistindo, ouvindo ou conversando."
     />
-    <meta property="og:title" content="Auris" />
+    <meta property="og:title" content="Auris — assistente em tempo real" />
     <meta
       property="og:description"
       content="Um assistente que escuta junto com você — em qualquer idioma."
@@ -18,41 +19,31 @@
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
-    <meta name="theme-color" content="#3b82f6" />
+    <meta name="theme-color" content="#1a6cf0" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Mono:wght@300;400&family=Inter:wght@300;400;450;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Epilogue:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="bg-blobs" aria-hidden="true">
-      <span class="blob blob-1"></span>
-      <span class="blob blob-2"></span>
-    </div>
+    <!-- Faint grid background — signature of the brand identity. -->
+    <div class="bg-grid" aria-hidden="true"></div>
 
     <header class="nav">
       <div class="brand">
-        <svg class="brand-mark" viewBox="0 0 120 120" fill="none" aria-hidden="true">
-          <defs>
-            <linearGradient id="navGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#5eead4" />
-              <stop offset="100%" stop-color="#3b82f6" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M 60 28 C 76 28 86 40 86 54 C 86 66 80 74 74 78 C 70 81 68 84 68 88 C 68 91 66 93 63 93 C 60 93 58 91 58 88 L 58 76 C 58 73 60 71 63 71 C 68 71 72 67 72 60 C 72 52 67 46 60 46 C 53 46 48 52 48 60 C 48 64 50 67 53 69 C 55 70 56 72 56 74 L 56 88"
-            stroke="url(#navGrad)"
-            stroke-width="2.4"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <circle cx="60" cy="60" r="3.2" fill="#3b82f6" />
+        <!-- EQ-bars mark, same as the desktop app. -->
+        <svg class="brand-mark" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+          <rect x="10" y="24" width="4" height="20" rx="1" fill="#1a6cf0" opacity="0.4" />
+          <rect x="17" y="16" width="4" height="28" rx="1" fill="#1a6cf0" opacity="0.65" />
+          <rect x="24" y="10" width="4" height="36" rx="1" fill="#1a6cf0" />
+          <rect x="31" y="16" width="4" height="28" rx="1" fill="#0db8a0" opacity="0.8" />
+          <rect x="38" y="22" width="4" height="22" rx="1" fill="#0db8a0" opacity="0.5" />
         </svg>
-        <span class="brand-text">AURIS</span>
+        <span class="brand-text">Auris<span class="brand-dot">.</span></span>
       </div>
       <nav class="nav-links">
         <a href="#features">Como funciona</a>
@@ -62,16 +53,16 @@
 
     <main>
       <section class="hero">
-        <span class="eyebrow">beta · Windows · grátis</span>
+        <span class="eyebrow">Beta · Windows · Grátis</span>
         <h1>
-          Um assistente que <em>escuta junto</em> com você.
+          Assistente em tempo real <em>que escuta junto</em> com você.
         </h1>
         <p class="lead">
-          Auris ouve o áudio do seu PC em tempo real — vídeo, podcast,
-          chamada — em <em class="lead-em">qualquer idioma</em>, traduz pra
-          português conforme a fala chega, e responde perguntas sobre o que
-          está rolando. No modo automático, detecta perguntas feitas a você
-          no áudio e sugere uma resposta articulada na hora.
+          Auris ouve o áudio do seu PC — vídeo, podcast, chamada — em
+          <em class="lead-em">qualquer idioma</em>, traduz pra português
+          conforme a fala chega, e responde perguntas sobre o que está
+          rolando. No modo automático, detecta perguntas feitas a você no
+          áudio e sugere uma resposta articulada na hora.
         </p>
 
         <div class="cta-row" id="download">
@@ -98,28 +89,34 @@
         <div class="hero-mock">
           <div class="mock-frame">
             <div class="mock-bar">
-              <span class="mock-dot" style="background:#fbbf24"></span>
-              <span class="mock-dot" style="background:#5eead4"></span>
-              <span class="mock-dot" style="background:#3b82f6"></span>
+              <div class="mock-brand">
+                <svg width="14" height="14" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+                  <rect x="10" y="24" width="4" height="20" rx="1" fill="#1a6cf0" opacity="0.4" />
+                  <rect x="17" y="16" width="4" height="28" rx="1" fill="#1a6cf0" opacity="0.65" />
+                  <rect x="24" y="10" width="4" height="36" rx="1" fill="#1a6cf0" />
+                  <rect x="31" y="16" width="4" height="28" rx="1" fill="#0db8a0" opacity="0.8" />
+                  <rect x="38" y="22" width="4" height="22" rx="1" fill="#0db8a0" opacity="0.5" />
+                </svg>
+                <span class="mock-brand-text">Auris<span class="brand-dot">.</span></span>
+              </div>
+              <div class="mock-status">
+                <span class="mock-status-dot"></span>
+                <span>ouvindo · EN→PT</span>
+              </div>
             </div>
             <div class="mock-content">
-              <div class="mock-ribbon">
-                <span class="mock-ribbon-dot"></span>
-                <span class="mock-ribbon-status">OUVINDO · EN→PT</span>
-                <span class="mock-ribbon-text">
-                  <span class="mock-translate-badge">↻ EN</span>
-                  "...e como funciona o protocolo de consenso?"
-                </span>
+              <div class="mock-section-label">Transcrição</div>
+              <div class="mock-transcript">
+                <span class="mock-translate-badge">↻ EN</span>
+                ...e como funciona o protocolo de consenso?
               </div>
-              <div class="mock-msg mock-msg-user">qual o ponto principal?</div>
-              <div class="mock-msg-auris">
-                <span class="mock-msg-tag">AURIS</span>
-                <p>
-                  O palestrante explica que <strong>consenso</strong> em
-                  sistemas distribuídos depende de um quórum de nós que
-                  concordem com o estado atual. Ele cita o algoritmo Raft
-                  como exemplo prático.
-                </p>
+
+              <div class="mock-section-label" style="color: rgba(26,108,240,0.6);">Sugestão Auris</div>
+              <div class="mock-response">
+                O palestrante explica que <strong>consenso</strong> em
+                sistemas distribuídos depende de um quórum de nós que
+                concordem com o estado atual. Cita o algoritmo <strong>Raft</strong>
+                como exemplo prático.
               </div>
             </div>
           </div>
@@ -127,12 +124,15 @@
       </section>
 
       <section class="features" id="features">
-        <h2>Três jeitos de usar.</h2>
+        <div class="section-header">
+          <span class="section-num">01</span>
+          <h2>Três jeitos de usar.</h2>
+        </div>
 
         <div class="feature-grid">
           <article class="feature-card">
             <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
                 <path d="M4 12h16M12 4l8 8-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             </div>
@@ -149,36 +149,36 @@
           </article>
 
           <article class="feature-card">
-            <div class="feature-icon" style="color: var(--live)" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+            <div class="feature-icon feature-icon-live" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
                 <rect x="10" y="3" width="4" height="10" rx="2" stroke="currentColor" stroke-width="1.6" />
                 <path d="M6 13a6 6 0 0012 0M12 19v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
               </svg>
             </div>
             <h3>Modo Auto</h3>
             <p>
-              Auris detecta quando alguém te faz uma pergunta no áudio (entrevista,
-              reunião, debate, sales call) e sugere uma resposta articulada que
-              você pode adaptar e dizer em voz alta.
+              Auris detecta quando alguém te faz uma pergunta no áudio
+              (entrevista, reunião, debate, sales call) e sugere uma resposta
+              articulada que você pode adaptar e dizer em voz alta.
             </p>
             <ul>
-              <li>Entrevistas de emprego com vídeo de fundo</li>
-              <li>Sales calls com pergunta surpresa do cliente</li>
+              <li>Entrevistas com vídeo de fundo</li>
+              <li>Sales calls com pergunta surpresa</li>
               <li>Reuniões com perguntas técnicas pesadas</li>
             </ul>
           </article>
 
           <article class="feature-card">
             <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
                 <path d="M3 5h11M3 5l3-3M3 5l3 3M21 19h-11M21 19l-3-3M21 19l-3 3M14 8.5l-4 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             </div>
             <h3>Tradução automática <span class="badge">novo</span></h3>
             <p>
-              Áudio em inglês, espanhol, francês ou outro idioma? Auris traduz
-              a transcrição pra português conforme a fala chega — e a resposta
-              do assistente já vem no idioma que você escolheu.
+              Áudio em inglês, espanhol, francês ou outro idioma? Auris
+              traduz a transcrição pra português conforme a fala chega — e
+              a resposta do assistente já vem no idioma que você escolheu.
             </p>
             <ul>
               <li>Cursos e palestras em inglês</li>
@@ -190,7 +190,10 @@
       </section>
 
       <section class="trust">
-        <h2>Como funciona por dentro</h2>
+        <div class="section-header">
+          <span class="section-num">02</span>
+          <h2>Como funciona por dentro</h2>
+        </div>
         <div class="trust-grid">
           <div class="trust-item">
             <strong>Áudio do sistema, sem mic</strong>
@@ -198,7 +201,7 @@
           </div>
           <div class="trust-item">
             <strong>Transcrição multilíngue</strong>
-            <p>Whisper-large-v3-turbo detecta o idioma sozinho — você não precisa configurar nada.</p>
+            <p>Whisper-large-v3-turbo detecta o idioma sozinho — você não configura nada.</p>
           </div>
           <div class="trust-item">
             <strong>Tradução em tempo real</strong>
@@ -220,7 +223,7 @@
       </section>
 
       <section class="final-cta">
-        <h2>Experimente agora</h2>
+        <h2>Experimente agora.</h2>
         <p>Beta gratuita. Sem cartão. Crie conta com email e use à vontade.</p>
         <a class="cta-primary" href="#download-link">
           <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
@@ -240,7 +243,7 @@
 
     <footer>
       <div class="footer-brand">
-        <span>AURIS</span>
+        <span>Auris<span class="brand-dot">.</span></span>
         <span class="footer-sep">·</span>
         <span>beta</span>
       </div>

@@ -6,26 +6,18 @@
   role="img"
   aria-label="Auris"
 >
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#5eead4" />
-      <stop offset="100%" stop-color="#3b82f6" />
-    </linearGradient>
-  </defs>
+  <!-- Rounded-square dark background. Radius 22% matches the macOS/iOS
+       app-icon template; works fine on Windows taskbar too. Slightly
+       lighter than pure ink so the icon doesn't disappear against
+       dark-mode Windows taskbars. -->
+  <rect width="120" height="120" rx="26" fill="#161a20" />
 
-  <!-- Rounded-square brand background. Radius 26 = 22% (matches modern app-icon spec). -->
-  <rect width="120" height="120" rx="26" fill="url(#bg)" />
-
-  <!-- Ear glyph in white. Stroke width tuned to read at 16×16. -->
-  <path
-    d="M 60 28 C 76 28 86 40 86 54 C 86 66 80 74 74 78 C 70 81 68 84 68 88 C 68 91 66 93 63 93 C 60 93 58 91 58 88 L 58 76 C 58 73 60 71 63 71 C 68 71 72 67 72 60 C 72 52 67 46 60 46 C 53 46 48 52 48 60 C 48 64 50 67 53 69 C 55 70 56 72 56 74 L 56 88"
-    stroke="white"
-    stroke-width="3.6"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    fill="none"
-  />
-
-  <!-- Inner dot — small white anchor to read at small sizes. -->
-  <circle cx="60" cy="60" r="3.4" fill="white" />
+  <!-- Five EQ bars: three blue ascending, two teal descending. Centered
+       horizontally with a shared baseline at y=90 for visual stability.
+       Same waveform mark used everywhere else in the brand system. -->
+  <rect x="25" y="50" width="9" height="40" rx="2" fill="#1a6cf0" opacity="0.45" />
+  <rect x="40" y="33" width="9" height="57" rx="2" fill="#1a6cf0" opacity="0.7" />
+  <rect x="55" y="18" width="9" height="72" rx="2" fill="#1a6cf0" />
+  <rect x="70" y="33" width="9" height="57" rx="2" fill="#0db8a0" opacity="0.85" />
+  <rect x="85" y="45" width="9" height="45" rx="2" fill="#0db8a0" opacity="0.55" />
 </svg>

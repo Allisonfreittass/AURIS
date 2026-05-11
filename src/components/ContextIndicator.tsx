@@ -18,7 +18,7 @@ export function ContextIndicator({ count, max = DEFAULT_MAX }: Props) {
 
   const fraction = Math.min(count / max, 1);
   const isFull = fraction >= 0.8;
-  const tone = isFull ? 'text-accent' : 'text-muted';
+  const tone = isFull ? 'text-accent' : 'text-subtle';
   const dashArray = `${(fraction * 100).toFixed(1)} 100`;
 
   return (
@@ -33,8 +33,8 @@ export function ContextIndicator({ count, max = DEFAULT_MAX }: Props) {
           r="5.2"
           fill="none"
           stroke="currentColor"
-          strokeOpacity="0.18"
-          strokeWidth="1.6"
+          strokeOpacity="0.2"
+          strokeWidth="1.4"
         />
         <circle
           cx="7"
@@ -42,7 +42,7 @@ export function ContextIndicator({ count, max = DEFAULT_MAX }: Props) {
           r="5.2"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.6"
+          strokeWidth="1.4"
           strokeLinecap="round"
           strokeDasharray={dashArray}
           pathLength="100"
