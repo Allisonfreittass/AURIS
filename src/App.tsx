@@ -3,6 +3,7 @@ import { ApiKeySetup } from './components/ApiKeySetup';
 import { AuthScreen } from './components/AuthScreen';
 import { Overlay } from './components/Overlay';
 import { PopupOverlay } from './components/PopupOverlay';
+import { OnboardingModal } from './components/OnboardingModal';
 import { AurisLogo } from './components/logo/AurisLogo';
 import { auris } from './lib/ipc';
 import type { AuthState } from '../shared/ipc';
@@ -18,6 +19,7 @@ type Phase = 'loading' | AuthState | 'no-bridge';
 
 function MainApp() {
   const [phase, setPhase] = useState<Phase>('loading');
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   async function refreshPhase() {
     if (!auris || typeof auris.authState !== 'function') {
@@ -35,6 +37,26 @@ function MainApp() {
   useEffect(() => {
     void refreshPhase();
   }, []);
+
+  // Surface the first-run tour once the user lands on the authed app.
+  // Skips and completions both flip the persistent flag, so this only
+  // fires the very first time after auth.
+  useEffect(() => {
+    if (phase !== 'authed') return;
+    auris
+      .getOnboardingDone()
+      .then((done) => {
+        if (!done) setShowOnboarding(true);
+      })
+      .catch(() => {});
+  }, [phase]);
+
+  function dismissOnboarding() {
+    setShowOnboarding(false);
+    void auris.setOnboardingDone(true).catch((err) => {
+      console.warn('failed to persist onboarding flag', err);
+    });
+  }
 
   if (phase === 'loading') {
     return (
@@ -68,5 +90,10 @@ function MainApp() {
     return <ApiKeySetup onSaved={refreshPhase} />;
   }
 
-  return <Overlay onSignedOut={refreshPhase} />;
+  return (
+    <>
+      <Overlay onSignedOut={refreshPhase} />
+      {showOnboarding && <OnboardingModal onDismiss={dismissOnboarding} />}
+    </>
+  );
 }

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>Changelog · Auris</title>
+    <meta
+      name="description"
+      content="Histórico de releases do Auris. Tudo que mudou em cada versão — novos recursos, melhorias e correções."
+    />
+    <meta property="og:title" content="Changelog · Auris" />
+    <meta
+      property="og:description"
+      content="Histórico de releases do Auris."
+    />
+    <meta property="og:type" content="article" />
+
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+    <meta name="theme-color" content="#1a6cf0" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Epilogue:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <header class="nav">
+      <a class="brand brand-link" href="./index.html">
+        <svg class="brand-mark" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+          <rect x="10" y="24" width="4" height="20" rx="1" fill="#1a6cf0" opacity="0.4" />
+          <rect x="17" y="16" width="4" height="28" rx="1" fill="#1a6cf0" opacity="0.65" />
+          <rect x="24" y="10" width="4" height="36" rx="1" fill="#1a6cf0" />
+          <rect x="31" y="16" width="4" height="28" rx="1" fill="#0db8a0" opacity="0.8" />
+          <rect x="38" y="22" width="4" height="22" rx="1" fill="#0db8a0" opacity="0.5" />
+        </svg>
+        <span class="brand-text">Auris<span class="brand-dot">.</span></span>
+      </a>
+      <nav class="nav-links">
+        <a href="./index.html#features">Como funciona</a>
+        <a href="./changelog.html" class="nav-link-active">Changelog</a>
+        <a href="./index.html#download" class="cta-link">Baixar</a>
+      </nav>
+    </header>
+
+    <main class="changelog-main">
+      <header class="changelog-header">
+        <span class="eyebrow">Changelog</span>
+        <h1>Tudo que mudou.</h1>
+        <p class="lead">
+          Releases públicas do Auris, mais recente em cima. Cada versão lista
+          os novos recursos, melhorias e ajustes de bastidores.
+        </p>
+      </header>
+
+      <ol class="release-list">
+        <!-- ── v0.4 (em desenvolvimento) ─────────────────────────────────── -->
+        <li class="release release-upcoming">
+          <header class="release-head">
+            <div class="release-meta">
+              <span class="release-version">v0.4.0-beta</span>
+              <span class="release-date">em desenvolvimento</span>
+            </div>
+            <h2 class="release-title">Histórico, atalhos e privacidade</h2>
+          </header>
+          <p class="release-summary">
+            Foco em controle e fluxo: pause de qualquer lugar do sistema,
+            histórico persistente das suas conversas, modo invisível pra
+            screen share e tutorial pra novos usuários.
+          </p>
+          <div class="release-changes">
+            <section>
+              <h3 class="changes-label changes-label-new">Novo</h3>
+              <ul>
+                <li><strong>Modo incógnito</strong> — janela some de gravadores e screen share (OBS, Zoom, screenshots).</li>
+                <li><strong>Histórico de sessões</strong> — toda conversa fica salva localmente, com busca e export.</li>
+                <li><strong>Atalho global</strong> <code>Ctrl+Shift+Space</code> pra pausar/retomar de qualquer app.</li>
+                <li><strong>Compartilhar trecho</strong> — exporte qualquer resposta como imagem PNG com branding.</li>
+                <li><strong>Onboarding em 3 passos</strong> pra novos usuários.</li>
+                <li><strong>Lente de visualização</strong> — alterne entre foco em chat ou em transcrição ao vivo.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 class="changes-label changes-label-improved">Melhorado</h3>
+              <ul>
+                <li>Popup flutuante salva sua posição entre sessões.</li>
+                <li>Botões de pausar/retomar e copiar resposta direto no overlay.</li>
+                <li>Janela principal mais larga pra acomodar a barra de ações.</li>
+                <li>Popup compacto agora cabe ~10 linhas de transcrição (era 3).</li>
+              </ul>
+            </section>
+            <section>
+              <h3 class="changes-label changes-label-fixed">Corrigido</h3>
+              <ul>
+                <li>Badge de "tradução" não aparece mais em áudio que já está em português (falsos positivos do detector de idioma).</li>
+              </ul>
+            </section>
+          </div>
+        </li>
+
+        <!-- ── v0.3 ───────────────────────────────────────────────────────── -->
+        <li class="release">
+          <header class="release-head">
+            <div class="release-meta">
+              <span class="release-version">v0.3.0-beta</span>
+              <span class="release-date">março de 2026</span>
+            </div>
+            <h2 class="release-title">Redesign visual + auto-update</h2>
+          </header>
+          <p class="release-summary">
+            Refundação visual completa em torno da nova identidade
+            corporate-system, e atualizações automáticas via Cloudflare R2.
+          </p>
+          <div class="release-changes">
+            <section>
+              <h3 class="changes-label changes-label-new">Novo</h3>
+              <ul>
+                <li>Identidade visual nova: paleta corporate-dark, tipografia Epilogue + JetBrains Mono, mark EQ-bars.</li>
+                <li>Auto-updater nativo — versões novas instalam sozinhas via R2, sem passar pelo GitHub.</li>
+                <li>Indicador ambient quando ocioso (anel pulsando), pra mostrar que tá vivo.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 class="changes-label changes-label-improved">Melhorado</h3>
+              <ul>
+                <li>Tipografia mais legível em todas as superfícies.</li>
+                <li>Hairlines no lugar de drop-shadows pesados — visual mais corporativo.</li>
+                <li>Popup flutuante com cantos sharp e detalhe acentuado em azul.</li>
+              </ul>
+            </section>
+          </div>
+        </li>
+
+        <!-- ── v0.2 ───────────────────────────────────────────────────────── -->
+        <li class="release">
+          <header class="release-head">
+            <div class="release-meta">
+              <span class="release-version">v0.2.0-beta</span>
+              <span class="release-date">fevereiro de 2026</span>
+            </div>
+            <h2 class="release-title">Tradução, popup e transcript acumulativo</h2>
+          </header>
+          <p class="release-summary">
+            Auris virou multilíngue: ouve qualquer idioma e traduz pra
+            português em tempo real. E ganhou o popup flutuante pra usar em
+            background.
+          </p>
+          <div class="release-changes">
+            <section>
+              <h3 class="changes-label changes-label-new">Novo</h3>
+              <ul>
+                <li><strong>Tradução automática</strong> — áudio em inglês, espanhol, francês ou outro idioma vira texto em português conforme a fala chega.</li>
+                <li><strong>Popup flutuante</strong> — minimize a janela e Auris vira um ícone discreto sempre no topo.</li>
+                <li><strong>Transcript acumulativo</strong> — tudo que foi dito fica no painel; role pra cima pra reler.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 class="changes-label changes-label-improved">Melhorado</h3>
+              <ul>
+                <li>Detecção de idioma automática via Whisper-large-v3-turbo.</li>
+                <li>Popup não rouba foco da janela onde você está digitando.</li>
+              </ul>
+            </section>
+          </div>
+        </li>
+
+        <!-- ── v0.1 ───────────────────────────────────────────────────────── -->
+        <li class="release">
+          <header class="release-head">
+            <div class="release-meta">
+              <span class="release-version">v0.1.0-beta</span>
+              <span class="release-date">janeiro de 2026</span>
+            </div>
+            <h2 class="release-title">Beta inicial</h2>
+          </header>
+          <p class="release-summary">
+            Primeira versão pública. Captura de áudio do sistema, transcrição
+            local e respostas via LLM.
+          </p>
+          <div class="release-changes">
+            <section>
+              <h3 class="changes-label changes-label-new">Novo</h3>
+              <ul>
+                <li>Captura de áudio do sistema via WASAPI loopback (Windows).</li>
+                <li>Transcrição com Whisper local ou remoto via Groq.</li>
+                <li>Chat com Llama 3.3 70B usando o que foi ouvido como contexto.</li>
+                <li><strong>Modo Manual</strong> — você digita perguntas sobre o áudio.</li>
+                <li><strong>Modo Auto</strong> — Auris detecta perguntas no áudio e sugere respostas.</li>
+                <li>Login com email/senha via Supabase, sessão cifrada localmente (Windows DPAPI).</li>
+              </ul>
+            </section>
+          </div>
+        </li>
+      </ol>
+
+      <section class="changelog-cta">
+        <h2>Pronto pra testar?</h2>
+        <p>A versão atual roda no Windows 10/11. Beta gratuita, sem cartão.</p>
+        <a class="cta-primary" href="./index.html#download-link" id="downloadBtn">
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+            <path
+              d="M7 1.5v8M3 6l4 4 4-4M2 12.5h10"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              fill="none"
+            />
+          </svg>
+          Baixar Auris para Windows
+        </a>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-brand">
+        <span>Auris<span class="brand-dot">.</span></span>
+        <span class="footer-sep">·</span>
+        <span>beta</span>
+      </div>
+      <div class="footer-links">
+        <a href="mailto:hi@auris.app">contato</a>
+        <a href="./index.html">início</a>
+        <a href="./changelog.html">changelog</a>
+      </div>
+    </footer>
+
+    <script src="./main.js"></script>
+  </body>
+</html>

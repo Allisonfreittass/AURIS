@@ -2,8 +2,9 @@ import { BrowserWindow, ipcMain } from 'electron';
 import Groq from 'groq-sdk';
 import * as secrets from './secrets';
 import * as auth from './auth';
-import { saveSessionMarkdown } from './sessionStore';
-import type { AurisMode, AuthOpResult, PopupShape } from '../../shared/ipc';
+import { saveSessionMarkdown, saveSharePng } from './sessionStore';
+import * as history from './sessionHistory';
+import type { AurisMode, AuthOpResult, PopupShape, StoredSession } from '../../shared/ipc';
 
 /** Validate a Groq key by issuing a 1-token request before we persist it. */
 async function validateApiKey(key: string): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -44,6 +45,10 @@ export interface IpcHooks {
   setMode: (mode: AurisMode) => void;
   getPreferredLang: () => string;
   setPreferredLang: (lang: string) => void;
+  getIncognito: () => boolean;
+  setIncognito: (on: boolean) => void;
+  getOnboardingDone: () => boolean;
+  setOnboardingDone: (done: boolean) => void;
 }
 
 export function registerIpcHandlers(_getWindow: () => BrowserWindow | null, hooks: IpcHooks) {
@@ -148,9 +153,30 @@ export function registerIpcHandlers(_getWindow: () => BrowserWindow | null, hook
     return saveSessionMarkdown(content);
   });
 
+  ipcMain.handle(
+    'auris:saveSharePng',
+    (_evt, bytes: Uint8Array, defaultName: string) => saveSharePng(bytes, defaultName),
+  );
+
+  // ── session history (auto-saved on every change) ─────────────────
+  ipcMain.handle('auris:saveSessionHistory', (_evt, session: StoredSession) => {
+    history.saveSession(session);
+  });
+  ipcMain.handle('auris:listSessions', () => history.listSessions());
+  ipcMain.handle('auris:getSession', (_evt, id: string) => history.getSession(id));
+  ipcMain.handle('auris:deleteSession', (_evt, id: string) => history.deleteSession(id));
+
   ipcMain.handle('auris:getMode', () => hooks.getMode());
   ipcMain.handle('auris:setMode', (_evt, mode: AurisMode) => hooks.setMode(mode));
 
   ipcMain.handle('auris:getPreferredLang', () => hooks.getPreferredLang());
   ipcMain.handle('auris:setPreferredLang', (_evt, lang: string) => hooks.setPreferredLang(lang));
+
+  ipcMain.handle('auris:getIncognito', () => hooks.getIncognito());
+  ipcMain.handle('auris:setIncognito', (_evt, on: boolean) => hooks.setIncognito(on));
+
+  ipcMain.handle('auris:getOnboardingDone', () => hooks.getOnboardingDone());
+  ipcMain.handle('auris:setOnboardingDone', (_evt, done: boolean) =>
+    hooks.setOnboardingDone(done),
+  );
 }

@@ -80,6 +80,47 @@ export type AuthOpResult =
   | { ok: true; user: UserInfo }
   | { ok: false; code: string; error: string };
 
+/** Message shape persisted to a session history file. Mirrors the
+ *  `Message` used by the Conversation component but drops the transient
+ *  `streaming` flag — only the final text is kept on disk. */
+export interface StoredMessage {
+  id: string;
+  role: 'user' | 'detected' | 'auris';
+  text: string;
+  ts: number;
+  error?: string;
+}
+
+/** Transcript final entry persisted to a session history file. */
+export interface StoredTranscript {
+  text: string;
+  ts: number;
+  lang?: string;
+  translated?: boolean;
+}
+
+/** A full session as written to disk. One file per session under
+ *  `userData/sessions/<id>.json`. Upserted on every auto-save. */
+export interface StoredSession {
+  id: string;
+  startedAt: number;
+  updatedAt: number;
+  messages: StoredMessage[];
+  transcripts: StoredTranscript[];
+}
+
+/** Lightweight summary for the history list view. Avoids loading every
+ *  message just to render the list. */
+export interface SessionSummary {
+  id: string;
+  startedAt: number;
+  updatedAt: number;
+  messageCount: number;
+  transcriptCount: number;
+  /** First user/detected question or first transcript line, truncated. */
+  preview: string;
+}
+
 export interface AurisApi {
   // Lifecycle
   start: () => Promise<void>;
@@ -108,6 +149,9 @@ export interface AurisApi {
    *  the OS user settings. */
   getPreferredLang: () => Promise<string>;
   setPreferredLang: (lang: string) => Promise<void>;
+  /** Fired when the preferred display language changes. Renderers use
+   *  this to keep the translated-badge guard in sync. */
+  onPreferredLangChange: (cb: (lang: string) => void) => () => void;
 
   // Ask Auris a question. Main process uses the rolling transcript buffer as
   // context and streams the response back via `onSuggestion`.
@@ -123,9 +167,44 @@ export interface AurisApi {
    *  Returns the absolute path or null on failure. */
   saveSession: (content: string) => Promise<string | null>;
 
+  /** Persist a PNG buffer through the OS Save dialog. Used by the share
+   *  flow so users get a real native picker (not a forced location).
+   *  Returns the saved absolute path or null if cancelled. */
+  saveSharePng: (bytes: Uint8Array, defaultName: string) => Promise<string | null>;
+
+  /** Auto-save the current session to history. Upserts by `id`. The main
+   *  process writes to `userData/sessions/<id>.json`. Renderer calls this
+   *  on a debounced timer; no user action required. */
+  saveSessionHistory: (session: StoredSession) => Promise<void>;
+
+  /** Return a summary of all sessions in history, newest first. Caps at
+   *  100 entries to keep the list manageable in the UI. */
+  listSessions: () => Promise<SessionSummary[]>;
+
+  /** Load a full session by ID. Returns null if missing or unparseable. */
+  getSession: (id: string) => Promise<StoredSession | null>;
+
+  /** Remove a session file from history. */
+  deleteSession: (id: string) => Promise<void>;
+
   // Mode control — manual (user-driven) or auto (question-detection).
   getMode: () => Promise<AurisMode>;
   setMode: (mode: AurisMode) => Promise<void>;
+
+  /** Incognito mode: when on, both windows are excluded from screen
+   *  captures (OBS, Zoom screen share, OS screenshots). Backed by
+   *  `BrowserWindow.setContentProtection`. Persisted across launches. */
+  getIncognito: () => Promise<boolean>;
+  setIncognito: (on: boolean) => Promise<void>;
+  /** Fired whenever incognito state changes (incl. toggles from another
+   *  surface like the popup). Renderers use this to keep their badges in
+   *  sync without polling. */
+  onIncognitoChange: (cb: (on: boolean) => void) => () => void;
+
+  /** Onboarding completion flag — true once the user finished or
+   *  skipped the first-run tour. Persisted across launches. */
+  getOnboardingDone: () => Promise<boolean>;
+  setOnboardingDone: (done: boolean) => Promise<void>;
 
   // API key management
   hasApiKey: () => Promise<boolean>;

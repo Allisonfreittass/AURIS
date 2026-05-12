@@ -1,4 +1,4 @@
-import { app, BrowserWindow, session } from 'electron';
+import { app, BrowserWindow, globalShortcut, session } from 'electron';
 import path from 'node:path';
 import { config as loadDotenv } from 'dotenv';
 import { createOverlayWindow } from './window';
@@ -8,8 +8,10 @@ import { SidecarSupervisor } from './sidecar';
 import { ClaudeStreamer } from './claude';
 import { createTray } from './tray';
 import { setupAutoUpdater } from './updater';
+import * as prefs from './prefs';
 import * as secrets from './secrets';
 import { translateText } from './translate';
+import { normalizeLangCode } from '../../shared/lang';
 import type { AurisMode, StatusKind, TranscriptEvent } from '../../shared/ipc';
 
 // Load .env from project root in dev only. Production builds never ship a
@@ -61,13 +63,14 @@ function send<T>(channel: string, payload: T) {
   }
 }
 
-/** Decide popup visibility based on the main window state and session state.
+/** Decide popup visibility based on main window state. The popup is the
+ *  minimized representation of the app — it appears whenever main is
+ *  minimized, so the user can start/pause from it without restoring main.
  *
  *  States:
- *   - main visible (any size)   → popup hidden (everything is on the main UI)
- *   - main minimized (taskbar)  → popup VISIBLE if running (the “Perssua mode”)
- *   - main hidden (closed to tray) → popup hidden (user wants no UI on screen)
- *   - no session running        → popup hidden (nothing to show)
+ *   - main visible            → popup hidden (controls live on main UI)
+ *   - main minimized          → popup VISIBLE (control surface)
+ *   - main hidden (close-to-tray) → popup hidden
  */
 function refreshPopupVisibility() {
   if (!popupWindow || popupWindow.isDestroyed()) return;
@@ -75,7 +78,7 @@ function refreshPopupVisibility() {
     popupWindow.hide();
     return;
   }
-  const shouldShow = mainWindow.isMinimized() && isRunning;
+  const shouldShow = mainWindow.isMinimized();
   if (shouldShow) {
     if (!popupWindow.isVisible()) popupWindow.showInactive();
   } else {
@@ -214,19 +217,6 @@ function cancelPendingPartialTranslation(): void {
     pendingPartialTimer = null;
   }
   pendingPartial = null;
-}
-
-/** Whisper sometimes returns "english" / "portuguese" instead of ISO codes.
- *  Normalize to a 2-letter code so comparisons against `preferredLang` work. */
-function normalizeLangCode(raw: string): string {
-  const lower = raw.toLowerCase().trim();
-  if (lower.length <= 3) return lower; // already a code
-  const map: Record<string, string> = {
-    english: 'en', portuguese: 'pt', spanish: 'es', french: 'fr',
-    italian: 'it', german: 'de', dutch: 'nl', russian: 'ru',
-    japanese: 'ja', chinese: 'zh', korean: 'ko', arabic: 'ar',
-  };
-  return map[lower] ?? lower.slice(0, 2);
 }
 
 /** Decide whether a freshly-detected question should fire the LLM. */
@@ -382,6 +372,39 @@ async function stopSession() {
   refreshPopupVisibility();
 }
 
+function toggleSession() {
+  if (isRunning) void stopSession();
+  else void startSession();
+}
+
+/** Apply the incognito flag to both windows and tell the renderers so
+ *  their badges update. Safe to call before the windows exist (will be
+ *  re-applied on creation). */
+function applyIncognito(on: boolean): void {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setContentProtection(on);
+  if (popupWindow && !popupWindow.isDestroyed()) popupWindow.setContentProtection(on);
+  send('auris:incognito-changed', on);
+  console.log(`[main] incognito → ${on ? 'on' : 'off'}`);
+}
+
+/** Global hotkey for toggling the session without focusing the app. The
+ *  user can pause/resume from any other window — meeting, IDE, browser —
+ *  without breaking flow. Logs a warning when the OS rejects the binding
+ *  (typically because another app already grabbed it). */
+const GLOBAL_TOGGLE_ACCELERATOR = 'CommandOrControl+Shift+Space';
+
+function registerGlobalShortcuts() {
+  const ok = globalShortcut.register(GLOBAL_TOGGLE_ACCELERATOR, toggleSession);
+  if (!ok) {
+    console.warn(
+      `[main] failed to register global shortcut "${GLOBAL_TOGGLE_ACCELERATOR}" — ` +
+        'another app may already be using it.',
+    );
+  } else {
+    console.log(`[main] global shortcut registered: ${GLOBAL_TOGGLE_ACCELERATOR}`);
+  }
+}
+
 // CSP applied at session level. In dev we relax it just enough for Vite's
 // HMR client (inline modules + WebSocket); in production we keep it tight.
 function installCsp() {
@@ -393,7 +416,7 @@ function installCsp() {
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:5173",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: http://localhost:5173",
+    "img-src 'self' data: blob: http://localhost:5173",
     // ws: needed for HMR socket; localhost for dev server fetches.
     "connect-src 'self' ws://localhost:5173 http://localhost:5173 https://fonts.googleapis.com https://fonts.gstatic.com",
     "object-src 'none'",
@@ -406,7 +429,7 @@ function installCsp() {
     "script-src 'self'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data:",
+    "img-src 'self' data: blob:",
     "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
     "object-src 'none'",
     "base-uri 'self'",
@@ -500,11 +523,26 @@ app.whenReady().then(() => {
     setPreferredLang: (lang) => {
       preferredLang = lang;
       console.log(`[main] preferred language → ${lang}`);
+      // Broadcast so the popup + main renderer can update the
+      // translated-badge guard immediately, without re-fetching.
+      send('auris:preferred-lang-changed', lang);
     },
+    getIncognito: () => prefs.getIncognito(),
+    setIncognito: (on) => {
+      prefs.setIncognito(on);
+      applyIncognito(on);
+    },
+    getOnboardingDone: () => prefs.getOnboardingDone(),
+    setOnboardingDone: (done) => prefs.setOnboardingDone(done),
   });
 
   mainWindow = createOverlayWindow();
   popupWindow = createPopupWindow();
+
+  // Apply persisted incognito setting at boot. Windows internally calls
+  // SetWindowDisplayAffinity(WDA_MONITOR), which makes the window
+  // invisible to screen capture (OBS, Zoom share, OS screenshots).
+  applyIncognito(prefs.getIncognito());
 
   setupAutoUpdater(() => mainWindow);
 
@@ -517,16 +555,15 @@ app.whenReady().then(() => {
 
   createTray({
     show: showWindow,
-    toggleRun: () => {
-      if (isRunning) void stopSession();
-      else void startSession();
-    },
+    toggleRun: toggleSession,
     quit: () => {
       (globalThis as { __aurisQuitting?: boolean }).__aurisQuitting = true;
       app.quit();
     },
     isRunning: () => isRunning,
   });
+
+  registerGlobalShortcuts();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -538,6 +575,7 @@ app.whenReady().then(() => {
 
 app.on('before-quit', () => {
   (globalThis as { __aurisQuitting?: boolean }).__aurisQuitting = true;
+  globalShortcut.unregisterAll();
   sidecar?.stop();
   claude?.reset();
 });

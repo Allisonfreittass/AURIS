@@ -55,6 +55,7 @@ export function AccountScreen({ onSignedOut, appVersion = '0.3.0-beta' }: Props)
   const [contextStatus, setContextStatus] = useState<string | null>(null);
 
   const [preferredLang, setPreferredLang] = useState('pt');
+  const [incognito, setIncognito] = useState(false);
 
   useEffect(() => {
     auris
@@ -80,6 +81,16 @@ export function AccountScreen({ onSignedOut, appVersion = '0.3.0-beta' }: Props)
       .getPreferredLang()
       .then((l) => setPreferredLang(l ?? 'pt'))
       .catch(() => {});
+
+    auris
+      .getIncognito()
+      .then(setIncognito)
+      .catch(() => {});
+
+    // Stay in sync if incognito is toggled from another surface (e.g.
+    // a future popup control or system-wide hotkey).
+    const offIncog = auris.onIncognitoChange(setIncognito);
+    return () => offIncog();
   }, []);
 
   async function handleSignOut() {
@@ -230,6 +241,54 @@ export function AccountScreen({ onSignedOut, appVersion = '0.3.0-beta' }: Props)
           Transcrições em outros idiomas são traduzidas automaticamente
           pra esse antes de aparecerem.
         </p>
+      </section>
+
+      {/* Privacy */}
+      <section className="flex flex-col gap-2.5">
+        <span className="eyebrow">Privacidade</span>
+        <button
+          type="button"
+          onClick={async () => {
+            const next = !incognito;
+            setIncognito(next);
+            try {
+              await auris.setIncognito(next);
+            } catch (err) {
+              console.error('failed to toggle incognito', err);
+              setIncognito(!next);
+            }
+          }}
+          className={`group flex items-center gap-3 rounded-sharp border bg-bg px-3 py-2.5 text-left transition-colors ${
+            incognito
+              ? 'border-accent/40 hover:border-accent/60'
+              : 'border-border hover:border-subtle/50'
+          }`}
+        >
+          <div className="flex flex-1 flex-col gap-0.5">
+            <div className="font-sans text-[13px] text-text">
+              Modo incógnito
+            </div>
+            <div className="font-sans text-[11px] leading-relaxed text-muted">
+              Esconde a janela de gravadores e screen share (OBS, Zoom,
+              screenshots).
+            </div>
+          </div>
+          <span
+            className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors ${
+              incognito
+                ? 'border-accent/60 bg-accent/30'
+                : 'border-border bg-elevated'
+            }`}
+          >
+            <span
+              className={`inline-block h-3.5 w-3.5 rounded-full transition-transform ${
+                incognito
+                  ? 'translate-x-[18px] bg-accent'
+                  : 'translate-x-[2px] bg-muted'
+              }`}
+            />
+          </span>
+        </button>
       </section>
 
       {/* Plan card */}

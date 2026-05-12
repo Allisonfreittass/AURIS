@@ -1,8 +1,10 @@
 import { BrowserWindow, screen } from 'electron';
 import path from 'node:path';
 import type { PopupShape } from '../../shared/ipc';
+import { getPopupCenter, setPopupCenter } from './prefs';
 
 const TOP_MARGIN = 16;
+const SAVE_DEBOUNCE_MS = 500;
 
 /**
  * Window size for each popup state. The renderer reports its desired shape
@@ -10,37 +12,82 @@ const TOP_MARGIN = 16;
  * content; idle is a 72×72 floating icon, no card chrome.
  */
 const SHAPE_SIZES: Record<PopupShape, { width: number; height: number }> = {
-  // Idle window has to be big enough for the sound-wave animation (which
-  // expands the button up to 2.4× its size, ~115px from a 48px button) plus
-  // shadow padding. The window is fully transparent — the user only sees
-  // the icon and ripples; the empty space around them isn't visible.
-  idle:     { width: 160, height: 160 },
-  compact:  { width: 520, height: 96  },  // status header + 1-line transcript
-  expanded: { width: 540, height: 220 },  // header + question banner + response
+  // Idle window holds the rounded "pill" with the Auris symbol + a play
+  // button. The pill itself is ~74×40 and the sound-wave ripple animation
+  // scales it up to 2.4×, so we need ~180×100 of transparent margin.
+  idle:     { width: 200, height: 100 },
+  // Compact: live transcript stream. Sized to fit ~10 lines of cumulative
+  // history comfortably (the renderer caps at 50 entries; older content is
+  // still scrollable inside the card).
+  compact:  { width: 520, height: 280 },
+  // Expanded: question banner + Auris response. Tall enough for medium
+  // answers without forcing a scroll on every reply.
+  expanded: { width: 540, height: 320 },
 };
 
+/** Top-center of the primary display, used as a fallback when there's no
+ *  saved position or the saved position is on a display that no longer
+ *  exists (e.g. user unplugged the second monitor). */
+function defaultCenter(): { x: number; y: number } {
+  const display = screen.getPrimaryDisplay();
+  const idle = SHAPE_SIZES.idle;
+  return {
+    x: display.workArea.x + Math.floor(display.workArea.width / 2),
+    y: display.workArea.y + TOP_MARGIN + Math.floor(idle.height / 2),
+  };
+}
+
+/** True when `center` falls inside any connected display's work area. */
+function isCenterVisible(center: { x: number; y: number }): boolean {
+  const wa = screen.getDisplayNearestPoint(center).workArea;
+  return (
+    center.x >= wa.x &&
+    center.x <= wa.x + wa.width &&
+    center.y >= wa.y &&
+    center.y <= wa.y + wa.height
+  );
+}
+
+/** Convert a CENTER + size into a top-left position, clamped so the window
+ *  stays fully on the nearest display. Prevents shape changes from pushing
+ *  the popup off-screen when the user dragged it to an edge. */
+function topLeftForCenter(
+  center: { x: number; y: number },
+  width: number,
+  height: number,
+): { x: number; y: number } {
+  const wa = screen.getDisplayNearestPoint(center).workArea;
+  const x = Math.max(wa.x, Math.min(wa.x + wa.width - width, center.x - Math.floor(width / 2)));
+  const y = Math.max(wa.y, Math.min(wa.y + wa.height - height, center.y - Math.floor(height / 2)));
+  return { x, y };
+}
+
+function currentCenter(win: BrowserWindow): { x: number; y: number } {
+  const [x, y] = win.getPosition();
+  const [w, h] = win.getSize();
+  return { x: x + Math.floor(w / 2), y: y + Math.floor(h / 2) };
+}
+
 /**
- * Compact popup that floats at top-center of the primary display. The
- * `setPopupShape` helper resizes it on demand so the visual matches what's
- * happening: a tiny floating icon when idle, a card when there's content.
+ * Compact popup that floats at top-center of the primary display by
+ * default; the user's last drag position is restored across sessions.
  *
  * Window flags:
  *  - frame:false + transparent:true → custom rounded shape via CSS
  *  - skipTaskbar:true → no taskbar entry
- *  - focusable:false → never steals keyboard from underlying app
  *  - alwaysOnTop "pop-up-menu" → above normal windows but below OS chrome
  */
 export function createPopupWindow(): BrowserWindow {
   const initial = SHAPE_SIZES.idle;
-  const display = screen.getPrimaryDisplay();
-  const x = Math.floor((display.workArea.width - initial.width) / 2);
-  const y = display.workArea.y + TOP_MARGIN;
+  const savedCenter = getPopupCenter();
+  const center = savedCenter && isCenterVisible(savedCenter) ? savedCenter : defaultCenter();
+  const start = topLeftForCenter(center, initial.width, initial.height);
 
   const win = new BrowserWindow({
     width: initial.width,
     height: initial.height,
-    x,
-    y,
+    x: start.x,
+    y: start.y,
     show: false,
     frame: false,
     transparent: true,
@@ -71,6 +118,26 @@ export function createPopupWindow(): BrowserWindow {
 
   win.setAlwaysOnTop(true, 'pop-up-menu');
 
+  // Persist drag position. The 'move' event fires for every pixel on
+  // Windows, so we debounce to avoid hammering disk during a drag. Saved
+  // value is the CENTER, not top-left, so the position survives shape
+  // changes (different shapes have different widths).
+  let saveTimer: NodeJS.Timeout | null = null;
+  win.on('move', () => {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      saveTimer = null;
+      if (win.isDestroyed()) return;
+      setPopupCenter(currentCenter(win));
+    }, SAVE_DEBOUNCE_MS);
+  });
+  win.on('closed', () => {
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+    }
+  });
+
   if (process.env.ELECTRON_RENDERER_URL) {
     void win.loadURL(`${process.env.ELECTRON_RENDERER_URL}#popup`);
   } else {
@@ -82,13 +149,13 @@ export function createPopupWindow(): BrowserWindow {
   return win;
 }
 
-/** Resize and re-center the popup based on the current state. */
+/** Resize the popup, keeping its CENTER anchored where it currently is so
+ *  the user's drag position survives shape changes. Clamps to the display
+ *  workarea if the new size would push it off-screen. */
 export function setPopupShape(win: BrowserWindow, shape: PopupShape): void {
   if (!win || win.isDestroyed()) return;
   const size = SHAPE_SIZES[shape];
-  const display = screen.getPrimaryDisplay();
-  const x = Math.floor((display.workArea.width - size.width) / 2);
-  const y = display.workArea.y + TOP_MARGIN;
+  const tl = topLeftForCenter(currentCenter(win), size.width, size.height);
   // `animate=true` smooths the transition on Windows.
-  win.setBounds({ x, y, width: size.width, height: size.height }, true);
+  win.setBounds({ x: tl.x, y: tl.y, width: size.width, height: size.height }, true);
 }

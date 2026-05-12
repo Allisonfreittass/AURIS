@@ -3,8 +3,10 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 // Slimmer + taller for a conversation flow — fits next to a video/browser
-// without dominating the screen.
-const WINDOW_WIDTH = 460;
+// without dominating the screen. Width tuned so the top bar fits brand +
+// badges + the full action cluster (mode, start/stop, history, account,
+// window controls) without crowding.
+const WINDOW_WIDTH = 600;
 const WINDOW_HEIGHT = 680;
 
 /**
@@ -34,7 +36,7 @@ export function createOverlayWindow(): BrowserWindow {
   const win = new BrowserWindow({
     width: WINDOW_WIDTH,
     height: WINDOW_HEIGHT,
-    minWidth: 400,
+    minWidth: 480,
     minHeight: 480,
     show: false,
     frame: false,

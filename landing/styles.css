@@ -600,3 +600,249 @@ footer {
     align-items: flex-start;
   }
 }
+
+/* ── Changelog page ─────────────────────────────────────────────────── */
+
+/* Brand wordmark used as a link back to home in secondary pages. */
+.brand-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Highlight current page in the nav. */
+.nav-link-active {
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 2px;
+}
+
+.changelog-main {
+  padding-bottom: 80px;
+}
+
+.changelog-header {
+  text-align: center;
+  padding: 60px 0 40px;
+}
+.changelog-header h1 {
+  font-family: 'Epilogue', sans-serif;
+  font-weight: 600;
+  font-size: clamp(34px, 5vw, 52px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 16px 0 18px;
+  color: var(--text);
+}
+.changelog-header .lead {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--subtle);
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+/* List of releases — vertical timeline-ish, separated by hairlines. */
+.release-list {
+  list-style: none;
+  margin: 32px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.release {
+  position: relative;
+  padding: 36px 0 40px;
+  border-top: 1px solid var(--rule);
+}
+.release:first-child {
+  border-top: none;
+}
+
+/* Future / unreleased version sits inside an accent-bordered card so it
+   reads as "preview" rather than "shipped". */
+.release-upcoming {
+  border-top: none;
+  margin-bottom: 8px;
+  padding: 28px 28px 32px;
+  background: rgba(26, 108, 240, 0.04);
+  border: 1px solid rgba(26, 108, 240, 0.25);
+  border-radius: 4px;
+  position: relative;
+}
+.release-upcoming::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.4;
+}
+
+.release-head {
+  margin-bottom: 14px;
+}
+.release-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+.release-version {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  font-size: 18px;
+  color: var(--accent);
+  letter-spacing: -0.005em;
+}
+.release-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+}
+.release-title {
+  font-family: 'Epilogue', sans-serif;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.release-summary {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--subtle);
+  margin-bottom: 24px;
+  max-width: 640px;
+}
+
+/* Each release groups its diff into Novo / Melhorado / Corrigido. */
+.release-changes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px 32px;
+}
+.release-changes section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.changes-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  display: inline-block;
+  padding: 3px 7px;
+  border-radius: 2px;
+  width: fit-content;
+}
+.changes-label-new {
+  color: var(--accent);
+  background: rgba(26, 108, 240, 0.10);
+  border: 1px solid rgba(26, 108, 240, 0.35);
+}
+.changes-label-improved {
+  color: var(--live);
+  background: rgba(13, 184, 160, 0.10);
+  border: 1px solid rgba(13, 184, 160, 0.35);
+}
+.changes-label-fixed {
+  color: var(--subtle);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+}
+
+.release-changes ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.release-changes li {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--light);
+  position: relative;
+  padding-left: 14px;
+}
+.release-changes li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 6px;
+  height: 1px;
+  background: var(--muted);
+}
+.release-changes li strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.release-changes code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  padding: 1px 6px;
+  background: var(--elevated);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* Bottom CTA block on the changelog page. */
+.changelog-cta {
+  margin-top: 64px;
+  padding: 48px 32px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--surface);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.changelog-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.45;
+}
+.changelog-cta h2 {
+  font-family: 'Epilogue', sans-serif;
+  font-weight: 600;
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.changelog-cta p {
+  font-size: 14px;
+  color: var(--subtle);
+  margin-bottom: 22px;
+}
+
+@media (max-width: 720px) {
+  .release-upcoming {
+    padding: 22px 18px 24px;
+  }
+  .release-changes {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .release-meta {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .changelog-cta {
+    padding: 32px 20px;
+  }
+}
+

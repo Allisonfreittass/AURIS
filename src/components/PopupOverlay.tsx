@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { AurisIconMark } from './logo/AurisIconMark';
+import { CopyButton } from './CopyButton';
 import { auris } from '../lib/ipc';
+import { normalizeLangCode, sameLang } from '../../shared/lang';
 import type { AurisMode, PopupShape, StatusKind } from '../../shared/ipc';
 
 const STATUS_LABEL: Record<StatusKind, string> = {
@@ -44,6 +46,8 @@ export function PopupOverlay() {
   const [detectedQuestion, setDetectedQuestion] = useState<string | null>(null);
   const [response, setResponse] = useState('');
   const [streaming, setStreaming] = useState(false);
+  const [incognito, setIncognito] = useState(false);
+  const [preferredLang, setPreferredLang] = useState('pt');
   const responseRef = useRef<HTMLDivElement>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
   // Tail-follow only when the user is already near the bottom — otherwise
@@ -52,6 +56,10 @@ export function PopupOverlay() {
 
   useEffect(() => {
     auris.getMode().then(setMode).catch(() => {});
+    auris.getIncognito().then(setIncognito).catch(() => {});
+    auris.getPreferredLang().then(setPreferredLang).catch(() => {});
+    const offIncog = auris.onIncognitoChange(setIncognito);
+    const offLang = auris.onPreferredLangChange(setPreferredLang);
 
     const offT = auris.onTranscript((e) => {
       if (e.final) {
@@ -94,6 +102,8 @@ export function PopupOverlay() {
       offDQ();
       offS();
       offStat();
+      offIncog();
+      offLang();
     };
   }, []);
 
@@ -137,10 +147,22 @@ export function PopupOverlay() {
   }, [history, partial]);
 
   const animate = status === 'listening' || status === 'processing';
+  // True when audio capture is live (or about to be). Drives the play/pause
+  // toggle in the header. 'paused', 'idle', and 'error' all mean "not
+  // capturing", so the button shows ▶.
+  const isSessionActive =
+    status === 'listening' || status === 'processing' || status === 'reconnecting';
 
   // ── Idle: just the floating icon, no card ──────────────────────────────
   if (shape === 'idle') {
-    return <IdleIcon animate={animate} status={status} />;
+    return (
+      <IdleIcon
+        animate={animate}
+        status={status}
+        isSessionActive={isSessionActive}
+        incognito={incognito}
+      />
+    );
   }
 
   // ── Active: full card with header + content ────────────────────────────
@@ -162,7 +184,19 @@ export function PopupOverlay() {
               auto
             </span>
           )}
+          {incognito && (
+            <span
+              title="Janela escondida de gravadores"
+              className="rounded-sharp border border-accent/40 bg-accent/[0.08] px-1.5 py-0.5 font-mono text-[8px] font-medium uppercase tracking-widest text-accent"
+            >
+              incog
+            </span>
+          )}
           <div className="flex-1" />
+          {showResponse && response && !streaming && (
+            <CopyButton text={response} title="Copiar resposta" />
+          )}
+          <PlayPauseButton active={isSessionActive} />
           <button
             type="button"
             onClick={() => auris.showMainWindow()}
@@ -195,16 +229,25 @@ export function PopupOverlay() {
 
           {showTranscript && (
             <span className="font-mono text-[11px] text-subtle">
-              {history.map((entry, i) => (
-                <span key={i} className="inline">
-                  {entry.translated && entry.lang && (
-                    <span className="mr-0.5 inline-block translate-y-[-1px] rounded-sharp border border-accent/30 bg-accent/[0.08] px-1 py-0.5 align-middle font-mono text-[7px] uppercase tracking-widest text-accent">
-                      ↻ {entry.lang}
-                    </span>
-                  )}
-                  <span className="text-light">{entry.text}</span>{' '}
-                </span>
-              ))}
+              {history.map((entry, i) => {
+                // Same render-time guard as TranscriptStream — never
+                // surface a "translated from" badge for a language the
+                // user already wants to read.
+                const showTranslatedBadge =
+                  entry.translated &&
+                  entry.lang &&
+                  !sameLang(entry.lang, preferredLang);
+                return (
+                  <span key={i} className="inline">
+                    {showTranslatedBadge && (
+                      <span className="mr-0.5 inline-block translate-y-[-1px] rounded-sharp border border-accent/30 bg-accent/[0.08] px-1 py-0.5 align-middle font-mono text-[7px] uppercase tracking-widest text-accent">
+                        ↻ {normalizeLangCode(entry.lang)}
+                      </span>
+                    )}
+                    <span className="text-light">{entry.text}</span>{' '}
+                  </span>
+                );
+              })}
               {partial && (
                 <span className="text-text">
                   {partial}
@@ -224,14 +267,20 @@ export function PopupOverlay() {
   );
 }
 
-/** The 72×72 idle popup. Pure floating icon, no card. Click forwards focus
- *  to the main window so the user can come back to the app quickly. */
+/** Idle popup: a horizontal pill containing the Auris symbol on the left
+ *  (clicking opens main) and a play/pause button on the right (clicking
+ *  toggles the session). Sound-wave ripples emanate from the pill outline
+ *  while audio is being captured. */
 function IdleIcon({
   animate,
   status,
+  isSessionActive,
+  incognito,
 }: {
   animate: boolean;
   status: StatusKind;
+  isSessionActive: boolean;
+  incognito: boolean;
 }) {
   const ringColor =
     status === 'listening'    ? 'bg-live/40'
@@ -240,32 +289,88 @@ function IdleIcon({
 
   return (
     <div className="drag flex h-full w-full items-center justify-center">
-      <button
-        type="button"
-        onClick={() => auris.showMainWindow()}
-        aria-label="Abrir Auris"
-        title="Abrir Auris"
-        className="no-drag relative grid h-12 w-12 place-items-center rounded-sharp border border-border bg-bg shadow-pop transition-colors hover:border-subtle/40"
-      >
+      <div className="relative">
         {animate && (
           <>
             <span
-              className={`absolute inset-0 rounded-sharp ${ringColor} animate-sound-wave pointer-events-none`}
+              className={`absolute inset-0 rounded-full ${ringColor} animate-sound-wave pointer-events-none`}
               style={{ animationDelay: '0s' }}
             />
             <span
-              className={`absolute inset-0 rounded-sharp ${ringColor} animate-sound-wave pointer-events-none`}
+              className={`absolute inset-0 rounded-full ${ringColor} animate-sound-wave pointer-events-none`}
               style={{ animationDelay: '0.8s' }}
             />
             <span
-              className={`absolute inset-0 rounded-sharp ${ringColor} animate-sound-wave pointer-events-none`}
+              className={`absolute inset-0 rounded-full ${ringColor} animate-sound-wave pointer-events-none`}
               style={{ animationDelay: '1.6s' }}
             />
           </>
         )}
-        <AurisIconMark className="relative h-[28px] w-[28px]" alive={animate} />
-      </button>
+        <div
+          className={`relative flex items-center gap-0.5 rounded-full border bg-bg px-2 py-1.5 shadow-pop ${
+            incognito ? 'border-accent/50' : 'border-border'
+          }`}
+          title={incognito ? 'Modo incógnito ativo' : undefined}
+        >
+          <button
+            type="button"
+            onClick={() => auris.showMainWindow()}
+            aria-label="Abrir Auris"
+            title="Abrir Auris"
+            className="no-drag grid h-7 w-7 place-items-center rounded-full transition-colors hover:bg-elevated"
+          >
+            <AurisIconMark className="h-[16px] w-[16px]" alive={animate} />
+          </button>
+          <span className="h-4 w-px bg-border" />
+          <button
+            type="button"
+            onClick={() => (isSessionActive ? auris.stop() : auris.start())}
+            aria-label={isSessionActive ? 'Pausar sessão' : 'Iniciar sessão'}
+            title={isSessionActive ? 'Pausar' : 'Iniciar'}
+            className={`no-drag grid h-7 w-7 place-items-center rounded-full transition-colors hover:bg-elevated ${
+              isSessionActive ? 'text-live' : 'text-text hover:text-accent'
+            }`}
+          >
+            {isSessionActive ? (
+              <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+                <rect x="2.4" y="1.8" width="1.7" height="6.4" rx="0.3" fill="currentColor" />
+                <rect x="5.9" y="1.8" width="1.7" height="6.4" rx="0.3" fill="currentColor" />
+              </svg>
+            ) : (
+              <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+                <path d="M2.8 1.6L8 5L2.8 8.4Z" fill="currentColor" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </div>
     </div>
+  );
+}
+
+/** Play/pause toggle in the popup header. Calls into main to start or
+ *  stop the audio session — same hook as the main window's Pause control,
+ *  just reachable without restoring the main UI. */
+function PlayPauseButton({ active }: { active: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={() => (active ? auris.stop() : auris.start())}
+      title={active ? 'Pausar' : 'Continuar'}
+      aria-label={active ? 'Pausar sessão' : 'Continuar sessão'}
+      className="no-drag grid h-5 w-5 place-items-center rounded-sharp text-muted transition-colors hover:bg-elevated hover:text-text"
+    >
+      {active ? (
+        <svg width="9" height="9" viewBox="0 0 9 9" aria-hidden="true">
+          <rect x="2" y="1.5" width="1.6" height="6" fill="currentColor" />
+          <rect x="5.4" y="1.5" width="1.6" height="6" fill="currentColor" />
+        </svg>
+      ) : (
+        <svg width="9" height="9" viewBox="0 0 9 9" aria-hidden="true">
+          <path d="M2.5 1.5L7.2 4.5L2.5 7.5Z" fill="currentColor" />
+        </svg>
+      )}
+    </button>
   );
 }
 

@@ -7,7 +7,9 @@ import type {
   AuthState,
   DetectedQuestionEvent,
   PopupShape,
+  SessionSummary,
   StatusEvent,
+  StoredSession,
   SuggestionDelta,
   TranscriptEvent,
   QuotaInfo,
@@ -34,9 +36,27 @@ const api: AurisApi = {
   clearContext: () => ipcRenderer.invoke('auris:clearContext'),
   saveSession: (content: string) =>
     ipcRenderer.invoke('auris:saveSession', content) as Promise<string | null>,
+  saveSharePng: (bytes: Uint8Array, defaultName: string) =>
+    ipcRenderer.invoke('auris:saveSharePng', bytes, defaultName) as Promise<string | null>,
+  saveSessionHistory: (session: StoredSession) =>
+    ipcRenderer.invoke('auris:saveSessionHistory', session) as Promise<void>,
+  listSessions: () => ipcRenderer.invoke('auris:listSessions') as Promise<SessionSummary[]>,
+  getSession: (id: string) =>
+    ipcRenderer.invoke('auris:getSession', id) as Promise<StoredSession | null>,
+  deleteSession: (id: string) =>
+    ipcRenderer.invoke('auris:deleteSession', id) as Promise<void>,
 
   getMode: () => ipcRenderer.invoke('auris:getMode') as Promise<AurisMode>,
   setMode: (mode: AurisMode) => ipcRenderer.invoke('auris:setMode', mode),
+
+  getIncognito: () => ipcRenderer.invoke('auris:getIncognito') as Promise<boolean>,
+  setIncognito: (on: boolean) => ipcRenderer.invoke('auris:setIncognito', on),
+  onIncognitoChange: (cb) => subscribe<boolean>('auris:incognito-changed', cb),
+
+  getOnboardingDone: () =>
+    ipcRenderer.invoke('auris:getOnboardingDone') as Promise<boolean>,
+  setOnboardingDone: (done: boolean) =>
+    ipcRenderer.invoke('auris:setOnboardingDone', done) as Promise<void>,
 
   authState: () => ipcRenderer.invoke('auris:authState') as Promise<AuthState>,
   isSupabaseConfigured: () => ipcRenderer.invoke('auris:isSupabaseConfigured') as Promise<boolean>,
@@ -52,6 +72,7 @@ const api: AurisApi = {
     ipcRenderer.invoke('auris:updateUserContext', context) as Promise<{ ok: boolean; error?: string }>,
   getPreferredLang: () => ipcRenderer.invoke('auris:getPreferredLang') as Promise<string>,
   setPreferredLang: (lang: string) => ipcRenderer.invoke('auris:setPreferredLang', lang) as Promise<void>,
+  onPreferredLangChange: (cb) => subscribe<string>('auris:preferred-lang-changed', cb),
 
   hasApiKey: () => ipcRenderer.invoke('auris:hasApiKey'),
   setApiKey: (key: string) => ipcRenderer.invoke('auris:setApiKey', key),

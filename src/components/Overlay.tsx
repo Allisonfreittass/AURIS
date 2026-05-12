@@ -5,12 +5,14 @@ import { Conversation, type Message } from './Conversation';
 import { AmbientCanvas } from './AmbientCanvas';
 import { AskInput, type AskInputHandle } from './AskInput';
 import { AccountScreen } from './AccountScreen';
+import { HistoryScreen } from './HistoryScreen';
+import { ShareModal } from './ShareModal';
 import { ConversationToolbar } from './ConversationToolbar';
 import { ErrorBanner } from './ErrorBanner';
 import { auris } from '../lib/ipc';
 import type { AudioErrorEvent, AurisMode, StatusKind } from '../../shared/ipc';
 
-type View = 'main' | 'account';
+type View = 'main' | 'account' | 'history';
 
 interface Props {
   onSignedOut: () => void;
@@ -18,6 +20,10 @@ interface Props {
 
 export function Overlay({ onSignedOut }: Props) {
   const [view, setView] = useState<View>('main');
+  // Transcript section can be folded away when the user wants more room
+  // for the chat. Defaults to expanded — the live audio is the whole
+  // point, hide it only on demand.
+  const [transcriptCollapsed, setTranscriptCollapsed] = useState(false);
 
   const [status, setStatus] = useState<StatusKind>('idle');
   const [isRunning, setIsRunning] = useState(false);
@@ -41,11 +47,28 @@ export function Overlay({ onSignedOut }: Props) {
 
   const [audioError, setAudioError] = useState<AudioErrorEvent | null>(null);
   const [llmError, setLlmError] = useState<string | null>(null);
+  const [incognito, setIncognito] = useState(false);
+  const [share, setShare] = useState<{ answer: string; question?: string } | null>(null);
+  const [preferredLang, setPreferredLang] = useState('pt');
   const askInputRef = useRef<AskInputHandle>(null);
+
+  // Session-history auto-save refs. Declared up here (above handlers that
+  // touch them) to avoid any TDZ-ish ordering surprises.
+  const sessionIdRef = useRef<string | null>(null);
+  const sessionStartedAtRef = useRef<number>(0);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Initial mode pull from main process ─────────────────────────────
   useEffect(() => {
     auris.getMode().then(setMode).catch(() => {});
+    auris.getIncognito().then(setIncognito).catch(() => {});
+    auris.getPreferredLang().then(setPreferredLang).catch(() => {});
+    const offIncog = auris.onIncognitoChange(setIncognito);
+    const offLang = auris.onPreferredLangChange(setPreferredLang);
+    return () => {
+      offIncog();
+      offLang();
+    };
   }, []);
 
   // ── IPC subscriptions ────────────────────────────────────────────────
@@ -195,6 +218,15 @@ export function Overlay({ onSignedOut }: Props) {
     setStreaming(false);
     setFinalCount(0);
     setTranscriptHistory([]);
+    // Drop the active session id so the NEXT message/transcript starts a
+    // fresh history entry. The just-cleared session was already on disk
+    // from the last debounced save; we don't overwrite it.
+    sessionIdRef.current = null;
+    sessionStartedAtRef.current = 0;
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
     try {
       await auris.clearContext();
     } catch (err) {
@@ -222,6 +254,47 @@ export function Overlay({ onSignedOut }: Props) {
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Auto-save current session to history ─────────────────────────
+  // The renderer owns the session id for the duration of one "context
+  // window" — it's reset when the user clears (Ctrl+L or button) or
+  // auto-clears after idle. The first piece of content (message OR
+  // transcript) generates an id; subsequent saves upsert by that id.
+  // Debounced to 5s so a burst of streaming deltas results in one disk
+  // write, not hundreds.
+  useEffect(() => {
+    if (messages.length === 0 && transcriptHistory.length === 0) return;
+    if (sessionIdRef.current === null) {
+      sessionIdRef.current =
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      sessionStartedAtRef.current = Date.now();
+    }
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      saveTimerRef.current = null;
+      const id = sessionIdRef.current;
+      if (!id) return;
+      // Strip transient `streaming` flag — only final state goes to disk.
+      const storedMessages = messages.map(({ id: mId, role, text, ts, error }) => ({
+        id: mId, role, text, ts, ...(error ? { error } : {}),
+      }));
+      void auris.saveSessionHistory({
+        id,
+        startedAt: sessionStartedAtRef.current,
+        updatedAt: Date.now(),
+        messages: storedMessages,
+        transcripts: transcriptHistory,
+      }).catch((err) => console.warn('failed to save session history', err));
+    }, 5000);
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
+    };
+  }, [messages, transcriptHistory]);
 
   // Auto-clear after N minutes of complete inactivity (no new transcript
   // finals + no asks). Resets the timer on any signal of activity. Default
@@ -271,27 +344,19 @@ export function Overlay({ onSignedOut }: Props) {
           view={view}
           onOpenAccount={() => setView('account')}
           onCloseAccount={() => setView('main')}
+          onOpenHistory={() => setView('history')}
           mode={mode}
           onModeChange={handleModeChange}
           contextCount={finalCount}
+          incognito={incognito}
         />
 
         {view === 'account' ? (
           <AccountScreen onSignedOut={onSignedOut} />
+        ) : view === 'history' ? (
+          <HistoryScreen />
         ) : (
           <>
-            {transcriptHistory.length > 0 && (
-              <>
-                <TranscriptStream
-                  status={status}
-                  history={transcriptHistory}
-                  partialLine={partialLine}
-                  expanded={messages.length === 0}
-                />
-                <div className="h-px w-full bg-border" />
-              </>
-            )}
-
             <ErrorBanner
               audioError={audioError}
               llmError={llmError}
@@ -305,8 +370,25 @@ export function Overlay({ onSignedOut }: Props) {
               onDismissLlm={() => setLlmError(null)}
             />
 
+            {/* Live transcript at the top — shown whenever there's
+                content. Collapsible so the user can give the chat more
+                room when they're focused on the conversation. */}
+            {(transcriptHistory.length > 0 || partialLine) && (
+              <TranscriptStream
+                status={status}
+                history={transcriptHistory}
+                partialLine={partialLine}
+                preferredLang={preferredLang}
+                collapsed={transcriptCollapsed}
+                onToggleCollapsed={() => setTranscriptCollapsed((v) => !v)}
+              />
+            )}
+
             {messages.length > 0 ? (
-              <Conversation messages={messages} />
+              <Conversation
+                messages={messages}
+                onShare={(answer, question) => setShare({ answer, question })}
+              />
             ) : transcriptHistory.length === 0 ? (
               <AmbientCanvas
                 status={status}
@@ -329,6 +411,14 @@ export function Overlay({ onSignedOut }: Props) {
           </>
         )}
       </div>
+
+      {share && (
+        <ShareModal
+          answer={share.answer}
+          question={share.question}
+          onClose={() => setShare(null)}
+        />
+      )}
     </div>
   );
 }

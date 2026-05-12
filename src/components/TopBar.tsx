@@ -8,12 +8,16 @@ interface Props {
   status: StatusKind;
   isRunning: boolean;
   onToggleRun: () => void;
-  view: 'main' | 'account';
+  view: 'main' | 'account' | 'history';
   onOpenAccount: () => void;
   onCloseAccount: () => void;
+  onOpenHistory: () => void;
   mode: AurisMode;
   onModeChange: (mode: AurisMode) => void;
   contextCount: number;
+  /** Incognito mode active — show a subtle badge so the user remembers
+   *  the window is hidden from screen capture. */
+  incognito: boolean;
 }
 
 /**
@@ -29,17 +33,21 @@ export function TopBar({
   view,
   onOpenAccount,
   onCloseAccount,
+  onOpenHistory,
   mode,
   onModeChange,
   contextCount,
+  incognito,
 }: Props) {
   const isAccount = view === 'account';
+  const isHistory = view === 'history';
+  const isSecondary = isAccount || isHistory;
 
   return (
     <header className="drag flex h-12 items-center justify-between gap-3 border-b border-border bg-bg px-3">
       {/* Left: brand or back */}
       <div className="flex items-center gap-2.5">
-        {isAccount ? (
+        {isSecondary ? (
           <button
             onClick={onCloseAccount}
             aria-label="Voltar"
@@ -61,14 +69,15 @@ export function TopBar({
           <AurisIconMark className="h-[18px] w-[18px]" alive={isRunning} />
         )}
         <span className="font-sans text-[14px] font-semibold tracking-[-0.005em] text-text leading-none">
-          {isAccount ? 'Conta' : 'Auris'}
+          {isAccount ? 'Conta' : isHistory ? 'Histórico' : 'Auris'}
           <span className="text-accent">.</span>
         </span>
+        {incognito && <IncognitoBadge />}
       </div>
 
       {/* Right: actions */}
       <div className="no-drag flex items-center gap-1.5">
-        {!isAccount && (
+        {!isSecondary && (
           <>
             <ContextIndicator count={contextCount} />
             <ModeToggle mode={mode} onChange={onModeChange} variant="topbar" />
@@ -96,6 +105,17 @@ export function TopBar({
               )}
             </button>
             <button
+              onClick={onOpenHistory}
+              aria-label="Histórico"
+              title="Histórico"
+              className="grid h-7 w-7 place-items-center rounded-sharp text-muted transition-colors hover:bg-elevated hover:text-text"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.3" fill="none" />
+                <path d="M6 3v3l2 1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+              </svg>
+            </button>
+            <button
               onClick={onOpenAccount}
               aria-label="Conta"
               title="Conta"
@@ -118,5 +138,28 @@ export function TopBar({
         <WindowControls />
       </div>
     </header>
+  );
+}
+
+/** Subtle reminder that incognito is on. Icon-only chip in the accent
+ *  color — tooltip carries the meaning so the top bar stays compact. */
+function IncognitoBadge() {
+  return (
+    <span
+      title="Modo incógnito ativo · janela escondida de gravadores e screen share"
+      aria-label="Modo incógnito ativo"
+      className="ml-1 grid h-5 w-5 place-items-center rounded-sharp border border-accent/40 bg-accent/[0.08] text-accent"
+    >
+      <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+        <path
+          d="M1 5C1 5 2.6 2.2 5 2.2C7.4 2.2 9 5 9 5C9 5 7.4 7.8 5 7.8C2.6 7.8 1 5 1 5Z"
+          stroke="currentColor"
+          strokeWidth="0.9"
+          fill="none"
+        />
+        <circle cx="5" cy="5" r="1.3" stroke="currentColor" strokeWidth="0.9" fill="none" />
+        <path d="M1.5 8.5L8.5 1.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" />
+      </svg>
+    </span>
   );
 }

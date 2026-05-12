@@ -1,5 +1,7 @@
 import { Fragment, useEffect, useRef } from 'react';
 import { AurisIconMark } from './logo/AurisIconMark';
+import { CopyButton } from './CopyButton';
+import { ShareButton } from './ShareButton';
 
 export interface Message {
   id: string;
@@ -22,6 +24,10 @@ const TIME_MARKER_GAP_MS = 2 * 60 * 1000;
 
 interface Props {
   messages: Message[];
+  /** Optional: when provided, Auris messages get a share icon that calls
+   *  this with the answer text + the preceding user/detected question (so
+   *  the share image can render the prompt as context). */
+  onShare?: (answer: string, question: string | undefined) => void;
 }
 
 /**
@@ -33,7 +39,7 @@ interface Props {
  */
 const NEAR_BOTTOM_PX = 80;
 
-export function Conversation({ messages }: Props) {
+export function Conversation({ messages, onShare }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
 
@@ -78,10 +84,22 @@ export function Conversation({ messages }: Props) {
           const prev = messages[i - 1];
           const showMarker =
             prev && m.ts - prev.ts > TIME_MARKER_GAP_MS;
+          // For an Auris message, the relevant "question" is the most
+          // recent preceding user/detected message — that's what the
+          // share image uses as context above the answer.
+          const question =
+            m.role === 'auris' && onShare
+              ? findPrecedingQuestion(messages, i)
+              : undefined;
           return (
             <Fragment key={m.id}>
               {showMarker && <TimeMarker fromTs={prev.ts} toTs={m.ts} />}
-              <MessageRow message={m} />
+              <MessageRow
+                message={m}
+                onShare={
+                  onShare ? () => onShare(m.text, question) : undefined
+                }
+              />
             </Fragment>
           );
         })}
@@ -112,7 +130,13 @@ function TimeMarker({ fromTs, toTs }: { fromTs: number; toTs: number }) {
   );
 }
 
-function MessageRow({ message }: { message: Message }) {
+function MessageRow({
+  message,
+  onShare,
+}: {
+  message: Message;
+  onShare?: () => void;
+}) {
   if (message.role === 'user') return <UserMessage text={message.text} />;
   if (message.role === 'detected') return <DetectedMessage text={message.text} />;
   return (
@@ -120,8 +144,22 @@ function MessageRow({ message }: { message: Message }) {
       text={message.text}
       streaming={message.streaming}
       error={message.error}
+      onShare={onShare}
     />
   );
+}
+
+/** Walk backwards from `idx` to find the most recent user/detected
+ *  message — used as the "question" context above the answer in shares. */
+function findPrecedingQuestion(msgs: Message[], idx: number): string | undefined {
+  for (let i = idx - 1; i >= 0; i--) {
+    const m = msgs[i];
+    if (m.role === 'user' || m.role === 'detected') return m.text;
+    // If we walk past an earlier auris message, stop — that turn already
+    // had its own question, and we want the question for THIS turn.
+    if (m.role === 'auris') return undefined;
+  }
+  return undefined;
 }
 
 function UserMessage({ text }: { text: string }) {
@@ -170,10 +208,12 @@ function AurisMessage({
   text,
   streaming,
   error,
+  onShare,
 }: {
   text: string;
   streaming?: boolean;
   error?: string;
+  onShare?: () => void;
 }) {
   const isThinking = streaming && !text;
 
@@ -197,6 +237,12 @@ function AurisMessage({
             <span className="font-mono text-[9px] uppercase tracking-widest text-muted">
               · pensando
             </span>
+          )}
+          {!error && text && !streaming && (
+            <>
+              <CopyButton text={text} title="Copiar resposta" />
+              {onShare && <ShareButton onClick={onShare} />}
+            </>
           )}
         </div>
 

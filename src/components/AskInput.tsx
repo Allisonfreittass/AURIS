@@ -5,6 +5,8 @@ interface Props {
   busy: boolean;
   /** Called with the question text right before auris.ask() is invoked. */
   onAsk: (question: string) => void;
+  /** Optional placeholder override — defaults to "Pergunte ao Auris…". */
+  placeholder?: string;
 }
 
 export interface AskInputHandle {
@@ -14,7 +16,7 @@ export interface AskInputHandle {
 }
 
 export const AskInput = forwardRef<AskInputHandle, Props>(function AskInput(
-  { busy, onAsk },
+  { busy, onAsk, placeholder = 'Pergunte ao Auris…' },
   ref,
 ) {
   const [value, setValue] = useState('');
@@ -70,7 +72,7 @@ export const AskInput = forwardRef<AskInputHandle, Props>(function AskInput(
           onKeyDown={handleKeyDown}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          placeholder="Pergunte ao Auris…"
+          placeholder={placeholder}
           disabled={busy}
           className="flex-1 resize-none border-none bg-transparent font-sans text-[13.5px] leading-[1.5] text-text placeholder:text-muted focus:outline-none disabled:opacity-50"
         />
