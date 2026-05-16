@@ -1,6 +1,6 @@
 # Auris
 
-Assistente jurídico desktop em tempo real para Windows. Captura áudio do
+Captura áudio do
 sistema (WASAPI loopback) + microfone, transcreve com `faster-whisper`
 localmente, e envia para Claude (Anthropic) com contexto jurídico
 brasileiro. Overlay sempre no topo, não rouba foco.
