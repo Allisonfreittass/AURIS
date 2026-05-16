@@ -7,7 +7,7 @@
  * bucket and bump `LATEST_VERSION` below.
  */
 const R2_BASE = 'https://pub-ce581fb3ec254955850622d3e9bd589e.r2.dev';
-const LATEST_VERSION = '0.3.0-beta';
+const LATEST_VERSION = '0.4.0-beta';
 const DOWNLOAD_URL = `${R2_BASE}/Auris-Setup-${LATEST_VERSION}.exe`;
 
 for (const btn of document.querySelectorAll('a[href="#download-link"]')) {

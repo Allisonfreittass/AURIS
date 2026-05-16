@@ -100,7 +100,8 @@
     },
     "publish": {
       "provider": "generic",
-      "url": "https://pub-ce581fb3ec254955850622d3e9bd589e.r2.dev"
+      "url": "https://pub-ce581fb3ec254955850622d3e9bd589e.r2.dev",
+      "channel": "latest"
     }
   }
 }

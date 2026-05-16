@@ -4,7 +4,6 @@ import type { PlanTier, QuotaInfo, UserProfile } from '../../shared/ipc';
 
 interface Props {
   onSignedOut: () => void;
-  appVersion?: string;
 }
 
 interface PlanCopy {
@@ -42,7 +41,8 @@ const PLAN_INFO: Record<PlanTier, PlanCopy> = {
   },
 };
 
-export function AccountScreen({ onSignedOut, appVersion = '0.3.0-beta' }: Props) {
+export function AccountScreen({ onSignedOut }: Props) {
+  const [appVersion, setAppVersion] = useState('');
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [quota, setQuota] = useState<QuotaInfo | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -80,6 +80,13 @@ export function AccountScreen({ onSignedOut, appVersion = '0.3.0-beta' }: Props)
     auris
       .getPreferredLang()
       .then((l) => setPreferredLang(l ?? 'pt'))
+      .catch(() => {});
+
+    // Pull the version from main (Electron's app.getVersion → package.json)
+    // so the footer label can never drift out of sync after a release bump.
+    auris
+      .getAppVersion()
+      .then(setAppVersion)
       .catch(() => {});
 
     auris
@@ -373,8 +380,12 @@ export function AccountScreen({ onSignedOut, appVersion = '0.3.0-beta' }: Props)
 
       <div className="mt-auto flex items-center justify-center gap-2 pt-3 font-mono text-[9px] uppercase tracking-widest text-muted">
         <span>Auris</span>
-        <span className="opacity-60">·</span>
-        <span>v{appVersion}</span>
+        {appVersion && (
+          <>
+            <span className="opacity-60">·</span>
+            <span>v{appVersion}</span>
+          </>
+        )}
       </div>
     </div>
   );

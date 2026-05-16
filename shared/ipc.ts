@@ -206,6 +206,12 @@ export interface AurisApi {
   getOnboardingDone: () => Promise<boolean>;
   setOnboardingDone: (done: boolean) => Promise<void>;
 
+  /** Reads the running app's version string straight from the main
+   *  process (Electron's `app.getVersion()`, sourced from package.json
+   *  at build time). Single source of truth — avoids hardcoded
+   *  defaults drifting out of sync after a release bump. */
+  getAppVersion: () => Promise<string>;
+
   // API key management
   hasApiKey: () => Promise<boolean>;
   setApiKey: (key: string) => Promise<{ ok: true } | { ok: false; error: string }>;

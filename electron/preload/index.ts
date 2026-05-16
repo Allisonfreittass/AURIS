@@ -58,6 +58,8 @@ const api: AurisApi = {
   setOnboardingDone: (done: boolean) =>
     ipcRenderer.invoke('auris:setOnboardingDone', done) as Promise<void>,
 
+  getAppVersion: () => ipcRenderer.invoke('auris:getAppVersion') as Promise<string>,
+
   authState: () => ipcRenderer.invoke('auris:authState') as Promise<AuthState>,
   isSupabaseConfigured: () => ipcRenderer.invoke('auris:isSupabaseConfigured') as Promise<boolean>,
   signIn: (email: string, password: string) =>

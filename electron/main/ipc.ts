@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import Groq from 'groq-sdk';
 import * as secrets from './secrets';
 import * as auth from './auth';
@@ -179,4 +179,6 @@ export function registerIpcHandlers(_getWindow: () => BrowserWindow | null, hook
   ipcMain.handle('auris:setOnboardingDone', (_evt, done: boolean) =>
     hooks.setOnboardingDone(done),
   );
+
+  ipcMain.handle('auris:getAppVersion', () => app.getVersion());
 }
