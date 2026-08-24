@@ -13,7 +13,7 @@ processo principal.
 
 - Windows 10/11
 - Node.js 20+
-- Python 3.11 (já instalado em `C:\Users\Allison\AppData\Local\Programs\Python\Python311`)
+- Python 3.11 (já instalado)
 - Chave da API Anthropic (`sk-ant-...`)
 
 ## Setup
