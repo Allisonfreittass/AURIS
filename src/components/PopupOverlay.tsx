@@ -80,6 +80,17 @@ export function PopupOverlay() {
         setPartial(e.text);
       }
     });
+    // The popup keeps its own transcript, so a clear triggered from the main
+    // window has to reach it explicitly — otherwise it keeps displaying a
+    // conversation that no longer exists anywhere else.
+    const offClear = auris.onContextCleared(() => {
+      setHistory([]);
+      setPartial('');
+      setDetectedQuestion(null);
+      setResponse('');
+      setStreaming(false);
+    });
+
     const offDQ = auris.onDetectedQuestion((e) => {
       setDetectedQuestion(e.text);
       setResponse('');
@@ -99,6 +110,7 @@ export function PopupOverlay() {
     const offStat = auris.onStatus((e) => setStatus(e.status));
     return () => {
       offT();
+      offClear();
       offDQ();
       offS();
       offStat();

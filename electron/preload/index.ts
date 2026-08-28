@@ -89,6 +89,7 @@ const api: AurisApi = {
   onStatus: (cb) => subscribe<StatusEvent>('auris:status', cb),
   onError: (cb) => subscribe<AudioErrorEvent>('auris:error', cb),
   onDetectedQuestion: (cb) => subscribe<DetectedQuestionEvent>('auris:detected-question', cb),
+  onContextCleared: (cb) => subscribe<null>('auris:context-cleared', () => cb()),
 };
 
 contextBridge.exposeInMainWorld('auris', api);

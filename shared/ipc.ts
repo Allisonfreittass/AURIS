@@ -319,4 +319,9 @@ export interface AurisApi {
   /** Fired in auto mode whenever Auris decides a transcribed final is a
    *  question being asked to the user and is about to suggest an answer. */
   onDetectedQuestion: (cb: (e: DetectedQuestionEvent) => void) => () => void;
+
+  /** Fired when the rolling context is cleared, from any surface. Each window
+   *  holds its own transcript, so they each have to drop it on this signal —
+   *  clearing in one window is not visible to the others. */
+  onContextCleared: (cb: () => void) => () => void;
 }
