@@ -7,7 +7,7 @@
  * LLM. The LLM does NOT auto-respond to every transcribed sentence — that
  * was the wrong model, since videos/podcasts are narration, not questions.
  *
- * Backend: Groq's free tier with Llama 3.3 70B Versatile (OpenAI-compatible).
+ * Backend: Groq (OpenAI-compatible). Model ids live in `models.ts`.
  */
 import Groq from 'groq-sdk';
 import type { SuggestionDelta } from '../../shared/ipc';
@@ -35,7 +35,9 @@ Diretrizes:
 - Se a "pergunta detectada" não for de fato uma pergunta para ele (ex: pergunta retórica, fragmento sem sentido, ruído de transcrição), responda APENAS com "—" e nada mais.
 - Não invente fatos. Se for sobre algo específico que você não sabe, sugira como ele pode responder com honestidade ("você pode mencionar que...").`;
 
-const MODEL = 'llama-3.3-70b-versatile';
+import { MODEL_REALTIME } from './models';
+
+const MODEL = MODEL_REALTIME;
 const MAX_TOKENS = 500;
 
 // How many recent transcript finals to include as context per ask. Each final

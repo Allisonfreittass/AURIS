@@ -46,7 +46,7 @@
       <nav class="nav-links">
         <a href="./index.html#features">Como funciona</a>
         <a href="./changelog.html" class="nav-link-active">Changelog</a>
-        <a href="./index.html#download" class="cta-link">Baixar</a>
+        <a href="./index.html#baixar" class="cta-link">Baixar</a>
       </nav>
     </header>
 
@@ -58,10 +58,58 @@
           Releases públicas do Auris, mais recente em cima. Cada versão lista
           os novos recursos, melhorias e ajustes de bastidores.
         </p>
+        <p class="lead changelog-shift">
+          O Auris nasceu como assistente genérico de áudio e hoje é um registro
+          de calls comerciais. As entradas abaixo estão como foram publicadas na
+          época, com o vocabulário de então — reescrevê-las seria falsear o
+          histórico.
+        </p>
       </header>
 
       <ol class="release-list">
         <!-- ── v0.4 ──────────────────────────────────────────────────────── -->
+        <li class="release">
+          <div class="release-head">
+            <div class="release-meta">
+              <span class="release-version">v0.5.0-beta</span>
+              <span class="release-date">agosto de 2026</span>
+            </div>
+            <h2 class="release-title">Registro pós-call e versão para Linux</h2>
+          </div>
+          <p class="release-summary">
+            A virada de foco: o Auris deixa de ser um assistente de áudio
+            genérico e passa a registrar reuniões comerciais. Ao encerrar uma
+            call, ela vira resumo, próximos passos, objeções e um e-mail de
+            follow-up pronto para revisar.
+          </p>
+          <div class="release-changes">
+            <div>
+              <span class="changes-label changes-label-new">Novo</span>
+              <ul>
+                <li><strong>Registro pós-call</strong> — resumo, próximos passos com responsável e prazo, objeções com a resposta que foi dada, e um e-mail de follow-up. Nunca enviado automaticamente.</li>
+                <li><strong>Minhas calls</strong> — o histórico virou uma lista de reuniões, com o registro e a transcrição em abas separadas.</li>
+                <li><strong>Captura em dois canais</strong> — microfone e áudio do sistema são gravados em separado, então cada linha da transcrição sabe se foi o vendedor ou o cliente que falou.</li>
+                <li><strong>Versão para Linux</strong> — AppImage x86_64, usando PulseAudio ou PipeWire no lugar do WASAPI.</li>
+              </ul>
+            </div>
+            <div>
+              <span class="changes-label changes-label-improved">Melhorado</span>
+              <ul>
+                <li><strong>Tipografia</strong> — mono e caixa alta ficaram restritas a rótulos e botões; todo texto de leitura passou para caixa normal, em tamanho maior.</li>
+                <li><strong>Contraste</strong> — a paleta foi ajustada para passar em WCAG AA em todas as combinações de texto e fundo.</li>
+                <li><strong>Histórico mais longo</strong> — o limite de falas guardadas por sessão subiu de 200 para 2000, o bastante para uma call de três horas.</li>
+              </ul>
+            </div>
+            <div>
+              <span class="changes-label changes-label-fixed">Corrigido</span>
+              <ul>
+                <li><strong>Modelo indisponível</strong> — o modelo de linguagem usado até aqui foi aposentado pelo provedor, o que quebrava sugestão, tradução e perguntas. Substituído.</li>
+                <li><strong>Horários da transcrição</strong> — todas as linhas de uma call mostravam o mesmo horário, e a duração saía zerada.</li>
+                <li><strong>Idioma detectado</strong> — fragmentos curtos mal reconhecidos derrubavam o idioma da call inteira e disparavam tradução de português para português.</li>
+              </ul>
+            </div>
+          </div>
+        </li>
         <li class="release">
           <header class="release-head">
             <div class="release-meta">
@@ -202,8 +250,12 @@
 
       <section class="changelog-cta">
         <h2>Pronto pra testar?</h2>
-        <p>A versão atual roda no Windows 10/11. Beta gratuita, sem cartão.</p>
-        <a class="cta-primary" href="./index.html#download-link" id="downloadBtn">
+        <p>Roda no Windows 10 ou 11 e no Linux.</p>
+        <!-- href tem que ser exatamente "#download-link": é o seletor que o
+             main.js usa para trocar o destino e o rótulo pela plataforma de
+             quem está lendo. Um caminho relativo aqui faz o botão escapar
+             dessa troca e mentir sobre o sistema. -->
+        <a class="cta-primary" href="#download-link" id="downloadBtn">
           <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
             <path
               d="M7 1.5v8M3 6l4 4 4-4M2 12.5h10"
@@ -214,16 +266,15 @@
               fill="none"
             />
           </svg>
-          Baixar Auris para Windows
+          <span data-download-label>Baixar</span>
         </a>
+        <p class="cta-note" data-download-note></p>
       </section>
     </main>
 
     <footer>
       <div class="footer-brand">
         <span>Auris<span class="brand-dot">.</span></span>
-        <span class="footer-sep">·</span>
-        <span>beta</span>
       </div>
       <div class="footer-links">
         <a href="mailto:hi@auris.app">contato</a>

@@ -4,41 +4,48 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Surfaces — corporate-dark, near-black with a slight cool bias.
-        // Tighter stepping than the old palette: less gradient, more
-        // distinct hairline-separated planes.
-        bg:        '#0a0c0f', // ink
-        surface:   '#161a20', // ink-2
-        elevated:  '#1f2530', // ink-3
-        raised:    '#252d38', // matches rule on purpose — used for chips/tags
-        overlay:   '#2a3340',
+        // Every colour resolves to a CSS variable declared in src/index.css.
+        // That file is the single source of truth; nothing here holds a
+        // literal except the few status colours that have no token yet.
+        //
+        // The `rgb(var(--x) / <alpha-value>)` form is what keeps Tailwind's
+        // opacity modifiers (`bg-danger/10`, `hover:bg-elevated/50`) working.
+        bg:        'rgb(var(--bg-app) / <alpha-value>)',
+        surface:   'rgb(var(--bg-panel) / <alpha-value>)',
+        elevated:  'rgb(var(--bg-elevated) / <alpha-value>)',
+        raised:    'rgb(var(--border) / <alpha-value>)',
+        overlay:   'rgb(var(--border) / <alpha-value>)',
 
-        // Hairlines — single, deliberate rule color used 100% strength.
-        border:    '#252d38', // rule
-        hairline:  '#1f2530', // softer divider where rule is too loud
+        border:    'rgb(var(--border) / <alpha-value>)',
+        hairline:  'rgb(var(--border-subtle) / <alpha-value>)',
 
-        // Text — five steps for hierarchy.
-        text:      '#ffffff', // white headlines
-        light:     '#c8d4e0', // body
-        subtle:    '#8a9ab0', // secondary
-        muted:     '#5a6880', // tertiary / mono labels
-        faint:     '#3a4555', // disabled / dividers in text
+        // Content voice. `primary`/`secondary`/`label`/`muted` mirror the
+        // token names exactly; `text`, `light`, `subtle` and `faint` are the
+        // legacy keys, repointed at the nearest token so existing components
+        // pick up the new palette without being rewritten.
+        primary:   'rgb(var(--text-primary) / <alpha-value>)',
+        secondary: 'rgb(var(--text-secondary) / <alpha-value>)',
+        label:     'rgb(var(--text-label) / <alpha-value>)',
+        muted:     'rgb(var(--text-muted) / <alpha-value>)',
 
-        // Primary accent — corporate blue. The brand color; anchors actions,
-        // the dot in "Auris.", and the left half of the EQ mark.
+        text:      'rgb(var(--text-primary) / <alpha-value>)',
+        light:     'rgb(var(--text-primary) / <alpha-value>)',
+        subtle:    'rgb(var(--text-secondary) / <alpha-value>)',
+        faint:     'rgb(var(--text-label) / <alpha-value>)',
+
         accent: {
-          DEFAULT: '#1a6cf0', // blue
-          bright:  '#4a8cff',
-          deep:    '#0f4ab0', // blue-d
-          tint:    '#e8f0fc', // blue-l (light bg/tinted fills)
-          ink:     '#ffffff', // text color over solid blue
+          DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
+          bright:  'rgb(var(--accent) / <alpha-value>)',
+          deep:    '#0f4ab0',
+          tint:    '#e8f0fc',
+          ink:     '#ffffff',
         },
 
         // Live / status — teal. Reserved for "Auris is listening" and the
         // right half of the EQ mark.
         live: {
-          DEFAULT: '#0db8a0', // teal
-          deep:    '#088a78', // teal-d
+          DEFAULT: '#0db8a0',
+          deep:    '#088a78',
           tint:    '#0db8a014',
         },
 
@@ -59,6 +66,12 @@ export default {
         wider: '0.06em',
         widest: '0.18em',
         eyebrow: '0.22em',
+      },
+      maxWidth: {
+        // Reading measure — 65-70 characters. Applied to every block of
+        // prose so a wide window never stretches a paragraph past the point
+        // where the eye loses the next line.
+        reading: '62ch',
       },
       borderRadius: {
         // Sharp/hairline aesthetic — no large radii anywhere in the system.

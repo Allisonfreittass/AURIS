@@ -4,6 +4,7 @@ import * as secrets from './secrets';
 import * as auth from './auth';
 import { saveSessionMarkdown, saveSharePng } from './sessionStore';
 import * as history from './sessionHistory';
+import { generatePostCallReport } from './postcall/generate';
 import type { AurisMode, AuthOpResult, PopupShape, StoredSession } from '../../shared/ipc';
 
 /** Validate a Groq key by issuing a 1-token request before we persist it. */
@@ -165,6 +166,24 @@ export function registerIpcHandlers(_getWindow: () => BrowserWindow | null, hook
   ipcMain.handle('auris:listSessions', () => history.listSessions());
   ipcMain.handle('auris:getSession', (_evt, id: string) => history.getSession(id));
   ipcMain.handle('auris:deleteSession', (_evt, id: string) => history.deleteSession(id));
+
+  ipcMain.handle('auris:generatePostCall', async (_evt, id: string) => {
+    const session = history.getSession(id);
+    if (!session) return { ok: false as const, error: 'Call não encontrada no histórico.' };
+
+    const authConfig = await secrets.loadAuth();
+    if (!authConfig) {
+      return { ok: false as const, error: 'Sessão expirada. Faça login novamente.' };
+    }
+
+    const result = await generatePostCallReport(session, authConfig);
+    if (!result.ok) return result;
+
+    if (!history.saveReport(id, result.report)) {
+      return { ok: false as const, error: 'O registro foi gerado mas não pôde ser salvo.' };
+    }
+    return result;
+  });
 
   ipcMain.handle('auris:getMode', () => hooks.getMode());
   ipcMain.handle('auris:setMode', (_evt, mode: AurisMode) => hooks.setMode(mode));

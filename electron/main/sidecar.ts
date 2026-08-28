@@ -2,7 +2,9 @@ import { app } from 'electron';
 import { spawn, ChildProcess } from 'node:child_process';
 import path from 'node:path';
 import { existsSync } from 'node:fs';
-import type { TranscriptEvent, AudioErrorEvent } from '../../shared/ipc';
+import type { TranscriptEvent, TranscriptChannel, AudioErrorEvent } from '../../shared/ipc';
+import { normalizeLangCode } from '../../shared/lang';
+import { toMillis } from '../../shared/time';
 
 interface SidecarEvents {
   onReady?: () => void;
@@ -13,7 +15,22 @@ interface SidecarEvents {
 
 const RESTART_BACKOFF_MS = [1000, 2000, 4000, 8000, 10000];
 
-export type AudioSource = 'loopback' | 'mic' | 'both';
+export type AudioSource = 'loopback' | 'mic' | 'both' | 'dual';
+
+/**
+ * Map the sidecar's raw stream name onto a speaker.
+ *
+ * The sidecar stays deliberately neutral — it knows `mic` and `loopback`,
+ * not roles. The assumption that turns one into the other lives here: the
+ * person running Auris is the seller, so their microphone is the seller and
+ * their speaker output is the client. Legacy `mixed` carries no attribution.
+ */
+function toChannel(raw: unknown): TranscriptChannel | undefined {
+  if (raw === 'mic') return 'vendedor';
+  if (raw === 'loopback') return 'cliente';
+  if (raw === 'mixed') return 'mixed';
+  return undefined;
+}
 
 export interface SidecarLaunchConfig {
   source: AudioSource;
@@ -23,6 +40,20 @@ export interface SidecarLaunchConfig {
   authToken?: string | null;
 }
 
+const IS_WINDOWS = process.platform === 'win32';
+
+// PyInstaller keeps the spec's `name` and appends `.exe` only on Windows.
+const SIDECAR_BIN = IS_WINDOWS ? 'auris_sidecar.exe' : 'auris_sidecar';
+
+// venv layout differs: `Scripts/python.exe` on Windows, `bin/python` elsewhere.
+const VENV_PYTHON = IS_WINDOWS
+  ? ['.venv', 'Scripts', 'python.exe']
+  : ['.venv', 'bin', 'python'];
+
+const VENV_SETUP_HINT = IS_WINDOWS
+  ? 'Run setup: cd python-sidecar && py -3.11 -m venv .venv && .venv\\Scripts\\pip install -r requirements.txt'
+  : 'Run setup: cd python-sidecar && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt';
+
 function resolveSidecarLaunch(config: SidecarLaunchConfig): { cmd: string; args: string[] } {
   const args: string[] = ['--source', config.source];
   if (config.proxyUrl && config.authToken) {
@@ -30,7 +61,7 @@ function resolveSidecarLaunch(config: SidecarLaunchConfig): { cmd: string; args:
   }
 
   if (app.isPackaged) {
-    const exe = path.join(process.resourcesPath, 'auris_sidecar.exe');
+    const exe = path.join(process.resourcesPath, SIDECAR_BIN);
     if (!existsSync(exe)) {
       throw new Error(`Sidecar binary not found at ${exe}`);
     }
@@ -38,13 +69,10 @@ function resolveSidecarLaunch(config: SidecarLaunchConfig): { cmd: string; args:
   }
 
   const root = path.resolve(__dirname, '..', '..');
-  const pythonExe = path.join(root, 'python-sidecar', '.venv', 'Scripts', 'python.exe');
+  const pythonExe = path.join(root, 'python-sidecar', ...VENV_PYTHON);
   const script = path.join(root, 'python-sidecar', 'auris_sidecar.py');
   if (!existsSync(pythonExe)) {
-    throw new Error(
-      `Python venv not found at ${pythonExe}. ` +
-        'Run setup: cd python-sidecar && py -3.11 -m venv .venv && .venv\\Scripts\\pip install -r requirements.txt',
-    );
+    throw new Error(`Python venv not found at ${pythonExe}. ${VENV_SETUP_HINT}`);
   }
   return { cmd: pythonExe, args: [script, ...args] };
 }
@@ -165,10 +193,19 @@ export class SidecarSupervisor {
         this.events.onTranscript({
           text: String(msg.text ?? ''),
           final: Boolean(msg.final),
-          ts: Number(msg.ts ?? Date.now() / 1000),
-          // Whisper auto-detect emits an ISO 639-1 code here. Without
-          // forwarding it, main process can't decide whether to translate.
-          lang: typeof msg.lang === 'string' ? msg.lang : undefined,
+          // Two unit conversions happen here, and this is the only place
+          // they should: the sidecar protocol becomes app types at this
+          // boundary, so nothing downstream — storage included — has to
+          // remember to do it.
+          ts: toMillis(msg.ts),
+          // Whisper's language field is not a stable format: faster-whisper
+          // gives ISO codes, Groq gives full names ("portuguese"). Storing
+          // the raw value meant every consumer had to normalize, and the one
+          // that forgot compared "Portuguese" against "pt".
+          lang: typeof msg.lang === 'string'
+            ? normalizeLangCode(msg.lang) || undefined
+            : undefined,
+          channel: toChannel(msg.channel),
         });
         break;
       case 'error':

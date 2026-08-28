@@ -2,6 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokens — single source of truth.
+ *
+ * Stored as space-separated RGB channels rather than hex so Tailwind can
+ * apply opacity modifiers (`bg-danger/10`) through `rgb(var(--x) / <alpha>)`.
+ * The hex each one encodes is in the comment beside it.
+ *
+ * Two values differ from the spec, both forced by WCAG AA on the darkest
+ * panel (contrast measured against #12151A and #171B21):
+ *   --text-muted  #5C6470 → #8B939E   (was 3.06:1 on --bg-panel, needs 4.5)
+ *   --text-label  #7A828E → #7B838F   (was 4.45:1 on --bg-elevated)
+ * The minimum passing value for both landed on nearly the same colour, which
+ * would have collapsed label and empty-state into one tone — so muted sits
+ * slightly ABOVE label instead. An empty state is a sentence somebody reads;
+ * a section label is chrome they skim. The reading text earns the contrast.
+ */
+:root {
+  --bg-app:        11 13 16;    /* #0B0D10 */
+  --bg-panel:      18 21 26;    /* #12151A */
+  --bg-elevated:   23 27 33;    /* #171B21 */
+  --border:        35 40 48;    /* #232830 */
+  --border-subtle: 26 30 37;    /* #1A1E25 */
+
+  --text-primary:   230 232 235; /* #E6E8EB — resumo, itens, corpo */
+  --text-secondary: 154 161 172; /* #9AA1AC — apoio, transcrição secundária */
+  --text-muted:     139 147 158; /* #8B939E — estados vazios, itálico */
+  --text-label:     123 131 143; /* #7B838F — rótulos mono uppercase */
+
+  --accent:      76 141 255;     /* #4C8DFF */
+  --accent-soft: rgba(76, 141, 255, 0.12);
+}
+
 @layer base {
   html,
   body,
@@ -72,14 +104,30 @@
   }
 
   /* Eyebrow label — JetBrains Mono, tracked-out, used for section labels. */
+  /* Section label — the chrome voice. Mono + uppercase is reserved for this
+     and for timestamps, counters and button labels; content is never set in
+     it. 11px/0.08em per the type rule. */
   .eyebrow {
     font-family: theme('fontFamily.mono');
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 400;
     text-transform: uppercase;
-    letter-spacing: theme('letterSpacing.eyebrow');
-    color: theme('colors.muted');
+    letter-spacing: 0.08em;
+    color: theme('colors.label');
   }
+  /* Chrome voice without the section-label semantics: timestamps, counters,
+     state tags, button labels. Same face and tracking as .eyebrow so the
+     interface has exactly one non-content typographic register. Colour is
+     left to the caller — these appear on several surfaces. */
+  .chrome {
+    font-family: theme('fontFamily.mono');
+    font-size: 11px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+  }
+
   .eyebrow-accent {
     color: theme('colors.accent.DEFAULT');
   }
@@ -127,6 +175,17 @@
     transform: translateY(2px);
     background: currentColor;
     animation: caret-blink 1.1s ease-in-out infinite;
+  }
+}
+
+@layer base {
+  /* Keyboard focus must be visible. `:focus-visible` keeps it off mouse
+     clicks, so the ring appears only when someone is actually navigating by
+     keyboard. */
+  :focus-visible {
+    outline: 2px solid theme('colors.accent.DEFAULT');
+    outline-offset: 2px;
+    border-radius: 2px;
   }
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "auris",
-  "version": "0.4.0-beta",
+  "version": "0.5.0-beta",
   "private": true,
   "description": "Auris — assistente em tempo real que escuta junto com você.",
   "author": "Auris",
@@ -14,7 +14,8 @@
     "package:sidecar": "node scripts/build-sidecar.mjs",
     "package:app": "electron-vite build && electron-builder",
     "package:dir": "electron-vite build && electron-builder --dir",
-    "package": "npm run package:sidecar && npm run package:app"
+    "package": "npm run package:sidecar && npm run package:app",
+    "check:models": "node scripts/check-models.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.40.1",
@@ -60,21 +61,21 @@
       "!**/.{nyc_output,coverage}",
       "!**/{.DS_Store,.git,.gitignore,.gitattributes,.editorconfig}"
     ],
-    "extraResources": [
-      {
-        "from": "python-sidecar/dist/auris_sidecar.exe",
-        "to": "auris_sidecar.exe"
-      },
-      {
-        "from": "resources/icon.ico",
-        "to": "icon.ico"
-      },
-      {
-        "from": "resources/icon.png",
-        "to": "icon.png"
-      }
-    ],
     "win": {
+      "extraResources": [
+        {
+          "from": "python-sidecar/dist/auris_sidecar.exe",
+          "to": "auris_sidecar.exe"
+        },
+        {
+          "from": "resources/icon.ico",
+          "to": "icon.ico"
+        },
+        {
+          "from": "resources/icon.png",
+          "to": "icon.png"
+        }
+      ],
       "target": [
         {
           "target": "nsis",
@@ -85,6 +86,37 @@
       ],
       "icon": "resources/icon.ico",
       "artifactName": "Auris-Setup-${version}.${ext}"
+    },
+    "linux": {
+      "extraResources": [
+        {
+          "from": "python-sidecar/dist/auris_sidecar",
+          "to": "auris_sidecar"
+        },
+        {
+          "from": "resources/icon.png",
+          "to": "icon.png"
+        }
+      ],
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "resources/icon.png",
+      "category": "Utility",
+      "synopsis": "Assistente em tempo real que escuta junto com voce",
+      "artifactName": "Auris-${version}-${arch}.${ext}",
+      "desktop": {
+        "entry": {
+          "Name": "Auris",
+          "Comment": "Assistente em tempo real que escuta junto com voce",
+          "Categories": "Utility;AudioVideo;"
+        }
+      }
     },
     "nsis": {
       "oneClick": false,

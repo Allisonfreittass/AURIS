@@ -45,6 +45,10 @@ const api: AurisApi = {
     ipcRenderer.invoke('auris:getSession', id) as Promise<StoredSession | null>,
   deleteSession: (id: string) =>
     ipcRenderer.invoke('auris:deleteSession', id) as Promise<void>,
+  generatePostCall: (id: string) =>
+    ipcRenderer.invoke('auris:generatePostCall', id) as ReturnType<
+      AurisApi['generatePostCall']
+    >,
 
   getMode: () => ipcRenderer.invoke('auris:getMode') as Promise<AurisMode>,
   setMode: (mode: AurisMode) => ipcRenderer.invoke('auris:setMode', mode),

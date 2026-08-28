@@ -69,7 +69,7 @@ export function TopBar({
           <AurisIconMark className="h-[18px] w-[18px]" alive={isRunning} />
         )}
         <span className="font-sans text-[14px] font-semibold tracking-[-0.005em] text-text leading-none">
-          {isAccount ? 'Conta' : isHistory ? 'Histórico' : 'Auris'}
+          {isAccount ? 'Conta' : isHistory ? 'Minhas calls' : 'Auris'}
           <span className="text-accent">.</span>
         </span>
         {incognito && <IncognitoBadge />}
@@ -85,8 +85,8 @@ export function TopBar({
               onClick={onToggleRun}
               className={
                 isRunning
-                  ? 'flex items-center gap-1.5 rounded-sharp border border-border bg-transparent px-2.5 py-1 font-mono text-[9px] font-medium uppercase tracking-widest text-subtle transition-colors hover:border-subtle hover:text-text'
-                  : 'flex items-center gap-1.5 rounded-sharp border border-accent/30 bg-accent/[0.08] px-2.5 py-1 font-mono text-[9px] font-medium uppercase tracking-widest text-accent transition-colors hover:bg-accent/[0.14] hover:border-accent/50'
+                  ? 'chrome flex items-center gap-1.5 rounded-sharp border border-border bg-transparent px-2.5 py-1.5 text-secondary transition-colors hover:border-subtle hover:text-primary'
+                  : 'chrome flex items-center gap-1.5 rounded-sharp bg-accent px-2.5 py-1.5 text-accent-ink transition-opacity hover:opacity-90'
               }
               aria-label={isRunning ? 'parar' : 'iniciar'}
             >
@@ -106,8 +106,8 @@ export function TopBar({
             </button>
             <button
               onClick={onOpenHistory}
-              aria-label="Histórico"
-              title="Histórico"
+              aria-label="Minhas calls"
+              title="Minhas calls"
               className="grid h-7 w-7 place-items-center rounded-sharp text-muted transition-colors hover:bg-elevated hover:text-text"
             >
               <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">

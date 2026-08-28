@@ -1,7 +1,8 @@
 """Audio capture for Auris.
 
 Three modes:
-  - "loopback" (default): only the system audio output (WASAPI loopback).
+  - "loopback" (default): only the system audio output (WASAPI loopback on
+    Windows, the PulseAudio/PipeWire ".monitor" source on Linux).
     Cleanest input — perfect for transcribing videos, podcasts, calls.
   - "mic": only the microphone (speaking to Auris like a voice assistant).
     Lower quality, more noise. Marked beta in the UI.
@@ -19,13 +20,24 @@ from typing import Optional
 
 import numpy as np
 import soundcard as sc
-from soundcard.mediafoundation import SoundcardRuntimeWarning
 
 from protocol import emit_error, log
 
+# `SoundcardRuntimeWarning` is defined by the Media Foundation backend only —
+# soundcard picks its backend per OS, and the PulseAudio/CoreAudio ones don't
+# export it. The module file ships on every platform, so off-Windows this is
+# not a clean ImportError: `mediafoundation` runs `_ffi.cdef()` over Windows
+# headers at import time and dies with `cffi.CDefError`. Catch broadly — the
+# only thing riding on it is a cosmetic warning filter.
+try:
+    from soundcard.mediafoundation import SoundcardRuntimeWarning
+except Exception:
+    SoundcardRuntimeWarning = None
+
 # soundcard emits "data discontinuity" warnings constantly while idle on Windows;
 # they are not actionable and would otherwise flood stderr.
-warnings.filterwarnings("ignore", category=SoundcardRuntimeWarning)
+if SoundcardRuntimeWarning is not None:
+    warnings.filterwarnings("ignore", category=SoundcardRuntimeWarning)
 
 SAMPLE_RATE = 16000
 FRAME_MS = 20
@@ -33,6 +45,26 @@ FRAME_SAMPLES = SAMPLE_RATE * FRAME_MS // 1000  # 320
 FRAME_BYTES = FRAME_SAMPLES * 2                 # int16 mono
 
 VALID_SOURCES = ("loopback", "mic", "both")
+
+IS_WINDOWS = sys.platform == "win32"
+
+
+def _no_loopback_hint() -> str:
+    if IS_WINDOWS:
+        return ("Nenhum dispositivo de loopback (WASAPI) encontrado para o "
+                "speaker padrao. Verifique se ha um dispositivo de saida ativo.")
+    return ("Nenhum monitor de saida encontrado para o speaker padrao. "
+            "Confira se o PulseAudio/PipeWire esta rodando (`pactl info`) e se "
+            "o sink padrao expoe uma fonte `.monitor` (`pactl list short sources`).")
+
+
+def _permission_hint(label: str) -> str:
+    if IS_WINDOWS:
+        return (f"Permissao de audio negada para {label}. "
+                "Habilite-o em Configuracoes do Windows -> Privacidade.")
+    return (f"Permissao de audio negada para {label}. "
+            "Verifique se o usuario tem acesso ao servidor de audio "
+            "(grupo `audio`) e se o Flatpak/snap nao esta bloqueando a captura.")
 
 
 def list_devices_for_diagnostics() -> None:
@@ -58,14 +90,28 @@ def _to_mono_float32(block: np.ndarray) -> np.ndarray:
 
 
 def _resolve_loopback_mic():
+    """Find the loopback capture device that mirrors the default output.
+
+    The two backends shape ids differently:
+      - WASAPI (Windows) exposes the loopback under the *same* id as the speaker.
+      - PulseAudio/PipeWire (Linux) exposes a separate source whose id is the
+        sink id plus a ".monitor" suffix.
+
+    An exact match therefore never hits on Linux, and the old "first loopback
+    found" fallback silently grabs whichever monitor the server happens to list
+    first — on a machine with more than one sound card that is usually the wrong
+    one. Try both shapes before falling back.
+    """
     default_speaker_id = sc.default_speaker().id
-    for mic in sc.all_microphones(include_loopback=True):
-        if mic.isloopback and mic.id == default_speaker_id:
+    loopbacks = [m for m in sc.all_microphones(include_loopback=True) if m.isloopback]
+
+    for mic in loopbacks:
+        if mic.id == default_speaker_id:
             return mic
-    for mic in sc.all_microphones(include_loopback=True):
-        if mic.isloopback:
+    for mic in loopbacks:
+        if mic.id == f"{default_speaker_id}.monitor":
             return mic
-    return None
+    return loopbacks[0] if loopbacks else None
 
 
 class AudioCapture:
@@ -138,11 +184,7 @@ class AudioCapture:
     def _handle_recorder_error(self, label: str, e: Exception) -> None:
         log(f"{label} recorder crashed: {e}")
         if "denied" in str(e).lower() or "permission" in str(e).lower():
-            emit_error(
-                "audio_permission",
-                f"Permissão de áudio negada para {label}. "
-                "Habilite-o em Configurações do Windows → Privacidade.",
-            )
+            emit_error("audio_permission", _permission_hint(label))
         else:
             emit_error(f"{label}_failed", f"Falha em {label}: {e}")
         self._stop.set()
@@ -179,8 +221,7 @@ class AudioCapture:
         if self.source in ("loopback", "both"):
             loopback_mic = _resolve_loopback_mic()
             if loopback_mic is None:
-                emit_error("no_loopback",
-                           "Nenhum dispositivo de loopback (WASAPI) encontrado para o speaker padrão.")
+                emit_error("no_loopback", _no_loopback_hint())
                 raise RuntimeError("no loopback device")
             log(f"loopback: {loopback_mic.name}")
             loop_factory = lambda: loopback_mic.recorder(

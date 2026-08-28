@@ -5,7 +5,7 @@ interface Props {
   busy: boolean;
   /** Called with the question text right before auris.ask() is invoked. */
   onAsk: (question: string) => void;
-  /** Optional placeholder override — defaults to "Pergunte ao Auris…". */
+  /** Optional placeholder override — defaults to "Pergunte sobre a conversa…". */
   placeholder?: string;
 }
 
@@ -16,7 +16,7 @@ export interface AskInputHandle {
 }
 
 export const AskInput = forwardRef<AskInputHandle, Props>(function AskInput(
-  { busy, onAsk, placeholder = 'Pergunte ao Auris…' },
+  { busy, onAsk, placeholder = 'Pergunte sobre a conversa…' },
   ref,
 ) {
   const [value, setValue] = useState('');

@@ -1,9 +1,11 @@
 # Auris
 
-Captura áudio do
-sistema (WASAPI loopback) + microfone, transcreve com `faster-whisper`
-localmente, e envia para Claude (Anthropic) com contexto jurídico
-brasileiro. Overlay sempre no topo, não rouba foco.
+Captura áudio do sistema (loopback WASAPI no Windows, fonte `.monitor` do
+PulseAudio/PipeWire no Linux) + microfone, transcreve via Whisper e envia
+para o LLM com contexto jurídico brasileiro. Overlay sempre no topo, não
+rouba foco.
+
+Roda em Windows 10/11 e Linux.
 
 Stack: Electron + Vite + React + Tailwind no front; Python sidecar com
 `faster-whisper` + `soundcard` para captura/transcrição; Anthropic SDK no
@@ -11,32 +13,55 @@ processo principal.
 
 ## Pré-requisitos
 
-- Windows 10/11
+- Windows 10/11 **ou** Linux com PulseAudio/PipeWire
 - Node.js 20+
-- Python 3.11 (já instalado)
-- Chave da API Anthropic (`sk-ant-...`)
+- Python 3.11+ (testado em 3.11 no Windows e 3.12 no Linux)
+- Acesso ao proxy Auris (login Supabase) ou uma chave Groq própria
+
+No Linux a captura de "áudio do sistema" usa a fonte `.monitor` que o
+PulseAudio/PipeWire expõe para o sink padrão — o equivalente do loopback
+WASAPI. Confirme que o servidor de áudio responde antes de começar:
+
+```bash
+pactl info                    # deve responder sem erro
+pactl list short sources      # deve listar ao menos uma fonte `.monitor`
+```
 
 ## Setup
 
 ### 1. Sidecar Python
 
+**Windows:**
+
 ```pwsh
 cd python-sidecar
-.\.venv\Scripts\Activate.ps1   # já criado durante o setup inicial
-python auris_sidecar.py --diagnose   # confere se WASAPI e mic estão visíveis
-```
-
-Se você quiser recriar do zero:
-
-```pwsh
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+python auris_sidecar.py --diagnose   # confere se WASAPI e mic estão visíveis
 ```
+
+**Linux:**
+
+```bash
+cd python-sidecar
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python auris_sidecar.py --diagnose   # lista monitores e mics
+```
+
+O `--diagnose` deve mostrar pelo menos uma linha marcada `[LOOPBACK]`. Se
+não mostrar, o sidecar não tem o que capturar e o app vai reportar
+`no_loopback`.
+
+`faster-whisper` (no fim do `requirements.txt`) só é necessário para o
+backend de transcrição **local**. Se você usa o proxy — o caminho padrão —
+o import é lazy e pode ser omitido, o que economiza uns 700MB de
+dependências (ctranslate2, av, tokenizers).
 
 ### 2. Aplicação Electron
 
-```pwsh
+```bash
 npm install
 npm run dev
 ```
@@ -101,7 +126,24 @@ Renderer React + Tailwind
 
 - **Tray icon**: o ícone padrão é vazio (sem PNG); funciona mas é
   invisível. Adicionar `resources/tray-icon.png` 32×32 para uso real.
-- **Empacotamento**: Phase 6 (PyInstaller + electron-builder) ainda não
-  configurado. Em dev mode o sidecar roda direto via `python-sidecar/.venv`.
-- **Validação manual end-to-end**: requer falar PT-BR no mic + ter chave
-  Claude válida configurada.
+- **Empacotamento**: configurado para Windows (NSIS) e Linux (AppImage).
+  PyInstaller não faz cross-compile, então cada instalador precisa ser
+  gerado no seu próprio sistema:
+
+  ```bash
+  npm run package        # sidecar + app, para o SO atual
+  ```
+
+  Saída em `release/`: `Auris-Setup-<versão>.exe` no Windows,
+  `Auris-<versão>-x64.AppImage` no Linux. Para gerar um `.deb` também,
+  acrescente `"deb"` ao array `build.linux.target` no `package.json` (exige
+  `dpkg` e `fakeroot` instalados).
+
+  Em dev mode o sidecar roda direto via `python-sidecar/.venv`, sem
+  PyInstaller.
+- **Validação manual end-to-end**: requer falar PT-BR no mic + estar logado
+  (ou ter chave Groq configurada).
+- **Auto-update no Linux**: `electron-updater` só sabe atualizar o formato
+  AppImage. Um `.deb` instalado não se atualiza sozinho.
+- **`setContentProtection` no Linux**: é no-op. A opção de esconder a
+  overlay de compartilhamento de tela só tem efeito no Windows.

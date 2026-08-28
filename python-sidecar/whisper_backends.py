@@ -166,7 +166,14 @@ class RemoteBackend(WhisperBackend):
                 raise RuntimeError(f"network error talking to proxy: {e}") from e
 
         if resp.status_code == 401:
-            raise RuntimeError(f"proxy rejected token (401) at {self.endpoint} — session may have expired")
+            # The worker explains WHY in the body ("unexpected iss",
+            # "signature verification failed", "SUPABASE_JWT_SECRET is not
+            # set", ...). Dropping it turns every auth misconfiguration into
+            # the same unactionable "session may have expired".
+            detail = (resp.text or "").strip()[:300] or "(corpo vazio)"
+            raise RuntimeError(
+                f"proxy rejected token (401) at {self.endpoint} :: {detail}"
+            )
         if resp.status_code == 429:
             # Rate-limited — surface a short, recognizable message so the
             # main process can route it to a friendly banner instead of

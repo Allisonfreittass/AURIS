@@ -1,8 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 """PyInstaller spec for the Auris sidecar (remote-Whisper-only build).
 
-This produces a standalone `auris_sidecar.exe` that the packaged Electron
-app spawns from `process.resourcesPath`. Because we route Whisper through
+This produces a standalone `auris_sidecar` binary (`.exe` on Windows) that
+the packaged Electron app spawns from `process.resourcesPath`. PyInstaller
+does not cross-compile, so run it once per target OS. Because we route Whisper through
 the Auris proxy + Groq's hosted whisper-large-v3-turbo, we deliberately
 EXCLUDE the local Whisper toolchain (faster-whisper / ctranslate2 /
 onnxruntime / huggingface-hub) — that drops the bundle from ~700MB to
@@ -10,10 +11,11 @@ onnxruntime / huggingface-hub) — that drops the bundle from ~700MB to
 
 Build:
     cd python-sidecar
-    .venv\\Scripts\\python -m PyInstaller --clean --noconfirm build.spec
+    .venv\\Scripts\\python -m PyInstaller --clean --noconfirm build.spec  # Windows
+    .venv/bin/python -m PyInstaller --clean --noconfirm build.spec         # Linux
 
 Output:
-    python-sidecar/dist/auris_sidecar.exe   ← shipped via electron-builder
+    python-sidecar/dist/auris_sidecar[.exe]   ← shipped via electron-builder
 """
 
 block_cipher = None

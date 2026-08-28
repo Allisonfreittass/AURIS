@@ -7,8 +7,14 @@ Standalone usage:
                             --auth-token <jwt-or-dev-token>  # remote Whisper
 
 Output protocol (stdout, one JSON object per line):
-    {"type": "ready", "ts": ..., "model": "...", "source": "...", "backend": "..."}
-    {"type": "transcript", "text": "...", "final": true|false, "ts": ...}
+    {"type": "ready", "ts": ..., "model": "...", "source": "...", "backend": "...",
+     "channels": ["mic", "loopback"]}
+    {"type": "transcript", "text": "...", "final": true|false, "ts": ...,
+     "channel": "mic"|"loopback"|"mixed"}
+
+`channel` says which stream the text came from, NOT who spoke. The mapping
+to speaker ("mic" = whoever runs Auris) is a product decision and belongs to
+the main process, not here.
     {"type": "error", "code": "...", "message": "...", "ts": ...}
 
 Input protocol (stdin, one JSON object per line — used for live token rotation):
@@ -20,6 +26,8 @@ import queue
 import signal
 import sys
 import threading
+from dataclasses import dataclass
+from typing import List
 
 from audio import AudioCapture, FRAME_BYTES, list_devices_for_diagnostics
 from protocol import emit, emit_error, log
@@ -82,6 +90,51 @@ def _build_backend(args: argparse.Namespace, token_store: _TokenStore) -> Whispe
     return LocalBackend(args.model, lang)
 
 
+@dataclass
+class _Channel:
+    """One independent capture → transcribe pipeline.
+
+    In `dual` mode there are two of these running side by side, each with its
+    own AudioCapture, its own queue, its own VAD state machine and its own
+    Whisper backend instance. Sharing a backend would serialize the two
+    channels behind RemoteBackend's request lock.
+    """
+    name: str
+    capture: AudioCapture
+    frames: "queue.Queue[bytes]"
+    transcriber: StreamingTranscriber
+
+
+def _channel_sources(source: str) -> List[tuple]:
+    """(channel name, AudioCapture source) pairs for a given --source."""
+    if source == "dual":
+        return [("mic", "mic"), ("loopback", "loopback")]
+    if source == "both":
+        return [("mixed", "both")]
+    return [(source, source)]
+
+
+def _pump(ch: _Channel, stop_event: threading.Event) -> None:
+    """Drain one channel's frames into its transcriber until told to stop."""
+    def on_partial(text, lang):
+        emit("transcript", text=text, final=False, lang=lang, channel=ch.name)
+
+    def on_final(text, lang):
+        emit("transcript", text=text, final=True, lang=lang, channel=ch.name)
+
+    while not stop_event.is_set():
+        try:
+            frame = ch.frames.get(timeout=0.5)
+        except queue.Empty:
+            continue
+        if len(frame) != FRAME_BYTES:
+            continue
+        try:
+            ch.transcriber.push(frame, on_partial=on_partial, on_final=on_final)
+        except Exception as e:
+            log(f"[{ch.name}] push failed: {e}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Auris transcription sidecar")
     parser.add_argument("--model", default="tiny",
@@ -93,8 +146,12 @@ def main() -> int:
                              "'auto' and let the main process translate to the user's "
                              "preferred display language after.")
     parser.add_argument("--source", default="loopback",
-                        choices=["loopback", "mic", "both"],
-                        help="audio source")
+                        choices=["loopback", "mic", "both", "dual"],
+                        help="audio source. 'dual' captures mic and loopback as "
+                             "two independent streams, each transcribed on its own "
+                             "and tagged with `channel` — that is what gives speaker "
+                             "attribution without diarization. 'both' mixes them into "
+                             "one stream and loses that.")
     parser.add_argument("--proxy-url", default=None,
                         help="when set, route Whisper through the Auris proxy "
                              "(e.g., http://localhost:8787) instead of local")
@@ -121,8 +178,14 @@ def main() -> int:
         name="stdin-listener",
     ).start()
 
-    pcm_queue: "queue.Queue[bytes]" = queue.Queue(maxsize=400)
-    capture = AudioCapture(pcm_queue, source=args.source)
+    specs = _channel_sources(args.source)
+
+    if args.source == "dual" and not args.proxy_url:
+        # Two LocalBackends means two Whisper models resident on the CPU.
+        # Remote mode has no such cost — each channel just gets its own
+        # HTTP session.
+        log("warning: dual mode on the local backend loads one Whisper model "
+            "per channel; prefer --proxy-url for dual")
 
     def shutdown(*_):
         log("shutdown signal received")
@@ -131,51 +194,74 @@ def main() -> int:
     signal.signal(signal.SIGINT, shutdown)
     signal.signal(signal.SIGTERM, shutdown)
 
-    try:
-        capture.start()
-    except Exception as e:
-        log(f"failed to start audio capture: {e}")
-        return EXIT_AUDIO_PERMISSION
+    channels: List[_Channel] = []
+    backend_name = "?"
 
-    try:
-        backend = _build_backend(args, token_store)
-    except Exception as e:
-        emit_error("backend_init_failed", f"Falha ao iniciar backend Whisper: {e}")
-        capture.stop()
-        return EXIT_RUNTIME
+    def teardown() -> None:
+        for ch in channels:
+            try:
+                ch.capture.stop()
+            except Exception as e:
+                log(f"[{ch.name}] capture stop failed: {e}")
+            try:
+                ch.transcriber.stop()
+            except Exception as e:
+                log(f"[{ch.name}] transcriber stop failed: {e}")
 
-    transcriber = StreamingTranscriber(backend)
-    backend_name = backend.__class__.__name__
-    transcriber.warmup()
+    for name, cap_source in specs:
+        frames: "queue.Queue[bytes]" = queue.Queue(maxsize=400)
+        capture = AudioCapture(frames, source=cap_source)
+        try:
+            capture.start()
+        except Exception as e:
+            log(f"[{name}] failed to start audio capture: {e}")
+            teardown()
+            return EXIT_AUDIO_PERMISSION
 
-    emit("ready", model=args.model, source=args.source, backend=backend_name)
-    log(f"ready — streaming transcripts (source={args.source}, backend={backend_name})")
+        try:
+            backend = _build_backend(args, token_store)
+        except Exception as e:
+            emit_error("backend_init_failed", f"Falha ao iniciar backend Whisper: {e}")
+            capture.stop()
+            teardown()
+            return EXIT_RUNTIME
+
+        backend_name = backend.__class__.__name__
+        transcriber = StreamingTranscriber(backend)
+        transcriber.warmup()
+        channels.append(_Channel(name=name, capture=capture, frames=frames,
+                                 transcriber=transcriber))
+
+    names = [ch.name for ch in channels]
+    emit("ready", model=args.model, source=args.source, backend=backend_name,
+         channels=names)
+    log(f"ready — streaming transcripts (source={args.source}, "
+        f"channels={names}, backend={backend_name})")
+
+    pumps = [
+        threading.Thread(target=_pump, args=(ch, stop_event), daemon=True,
+                         name=f"pump-{ch.name}")
+        for ch in channels
+    ]
+    for t in pumps:
+        t.start()
 
     try:
         while not stop_event.is_set():
-            try:
-                frame = pcm_queue.get(timeout=0.5)
-            except queue.Empty:
-                continue
-            if len(frame) != FRAME_BYTES:
-                continue
-            transcriber.push(
-                frame,
-                on_partial=lambda text, lang: emit("transcript", text=text, final=False, lang=lang),
-                on_final=lambda text, lang: emit("transcript", text=text, final=True, lang=lang),
-            )
+            # Pumps do the work; this thread just waits for the stop signal so
+            # SIGINT/SIGTERM still land on the main thread.
+            stop_event.wait(0.5)
     except KeyboardInterrupt:
         pass
     except Exception as e:
         emit_error("runtime_error", f"Erro inesperado no loop principal: {e}")
         return EXIT_RUNTIME
     finally:
+        stop_event.set()
         log("stopping audio capture")
-        capture.stop()
-        try:
-            transcriber.stop()
-        except Exception:
-            pass
+        for t in pumps:
+            t.join(timeout=1.5)
+        teardown()
         emit("stopped")
 
     return EXIT_OK

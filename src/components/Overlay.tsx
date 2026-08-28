@@ -10,7 +10,17 @@ import { ShareModal } from './ShareModal';
 import { ConversationToolbar } from './ConversationToolbar';
 import { ErrorBanner } from './ErrorBanner';
 import { auris } from '../lib/ipc';
-import type { AudioErrorEvent, AurisMode, StatusKind } from '../../shared/ipc';
+import type {
+  AudioErrorEvent,
+  AurisMode,
+  StatusKind,
+  TranscriptChannel,
+} from '../../shared/ipc';
+import { toMillis } from '../../shared/time';
+
+/** How many transcript finals a session keeps. Sized to outlast a full
+ *  call rather than just to bound memory — see the note at the push site. */
+const MAX_TRANSCRIPT_ENTRIES = 2000;
 
 type View = 'main' | 'account' | 'history';
 
@@ -34,7 +44,7 @@ export function Overlay({ onSignedOut }: Props) {
   // Full history of transcript finals since last clear. Capped to keep
   // memory sane on multi-hour sessions; the same cap roughly tracks the
   // rolling buffer in main (`finals[]` in ClaudeStreamer).
-  type TranscriptEntry = { text: string; ts: number; lang?: string; translated?: boolean };
+  type TranscriptEntry = { text: string; ts: number; lang?: string; translated?: boolean; channel?: TranscriptChannel };
   const [transcriptHistory, setTranscriptHistory] = useState<TranscriptEntry[]>([]);
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -78,8 +88,14 @@ export function Overlay({ onSignedOut }: Props) {
         setPartialLine('');
 
         // Translation events upgrade the entry that was already pushed
-        // (matched by `ts`); originals push a new entry. Cap at 200 to
-        // keep memory bounded on long sessions.
+        // (matched by `ts`); originals push a new entry.
+        //
+        // The cap has to outlast a whole call, not just bound memory: the
+        // post-call report is generated from what got persisted here, so a
+        // cap that trims the opening of a one-hour meeting produces a
+        // summary that is quietly missing half the conversation. At roughly
+        // 5-10 finals per minute, 2000 covers a three-hour call; the entries
+        // are short strings, so the memory cost is negligible.
         setTranscriptHistory((prev) => {
           if (e.translated) {
             const out = prev.map((entry) =>
@@ -91,9 +107,11 @@ export function Overlay({ onSignedOut }: Props) {
           }
           const next = [
             ...prev,
-            { text: e.text, ts: e.ts, lang: e.lang, translated: false },
+            { text: e.text, ts: e.ts, lang: e.lang, translated: false, channel: e.channel },
           ];
-          return next.length > 200 ? next.slice(next.length - 200) : next;
+          return next.length > MAX_TRANSCRIPT_ENTRIES
+            ? next.slice(next.length - MAX_TRANSCRIPT_ENTRIES)
+            : next;
         });
 
         if (!e.translated) {
@@ -453,6 +471,7 @@ interface TranscriptEntry {
   ts: number;
   lang?: string;
   translated?: boolean;
+  channel?: TranscriptChannel;
 }
 
 /** Render the session as a Markdown document for export. Includes both
@@ -484,7 +503,7 @@ function renderSessionAsMarkdown(
     lines.push('## Transcrição do áudio');
     lines.push('');
     for (const t of transcripts) {
-      const time = new Date(t.ts).toLocaleTimeString('pt-BR');
+      const time = new Date(toMillis(t.ts)).toLocaleTimeString('pt-BR');
       const langTag = t.lang
         ? t.translated
           ? ` _[${t.lang} → traduzido]_`

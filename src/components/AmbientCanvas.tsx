@@ -33,7 +33,7 @@ export function AmbientCanvas({ status, isRunning, mode }: Props) {
 
   // Subtitle copy — mirrors what the icon is doing.
   const headline =
-    !isRunning ? 'Pronto pra escutar com você.' :
+    !isRunning ? 'Pronto pra acompanhar sua call.' :
     isAuto && listening ? 'Ouvindo. Vou interceptar a próxima pergunta.' :
     isAuto ? 'Modo automático ativo.' :
     listening ? 'Estou ouvindo.' :
@@ -41,7 +41,9 @@ export function AmbientCanvas({ status, isRunning, mode }: Props) {
     'Pronto.';
 
   const hint =
-    !isRunning ? 'Toque um vídeo, podcast ou chamada e clique em ▶ iniciar.' :
+    !isRunning
+      ? 'Abra a reunião em qualquer app e clique em Iniciar. Use fone de ouvido para o AURIS separar quem falou o quê.'
+      :
     isAuto ? 'Quando alguém te perguntar algo, sugiro a resposta.' :
     'Pergunte abaixo sobre o que está ouvindo.';
 
@@ -75,13 +77,11 @@ export function AmbientCanvas({ status, isRunning, mode }: Props) {
       </div>
 
       {/* Status copy — sans, restrained. */}
-      <div className="flex max-w-[320px] flex-col items-center gap-2">
-        <h1 className="font-sans text-[20px] font-semibold tracking-[-0.01em] leading-tight text-text">
+      <div className="flex max-w-[380px] flex-col items-center gap-2">
+        <h1 className="text-[20px] font-semibold leading-tight tracking-[-0.01em] text-primary">
           {headline}
         </h1>
-        <p className="font-sans text-[12.5px] leading-relaxed text-subtle">
-          {hint}
-        </p>
+        <p className="text-[13px] leading-[1.6] text-secondary">{hint}</p>
       </div>
     </div>
   );

@@ -5,22 +5,20 @@ import { existsSync } from 'node:fs';
 let tray: Tray | null = null;
 
 function loadIcon() {
-  // Reuse the main app icon — Windows scales it down for the tray
-  // automatically; .ico embeds 16×16 + 32×32 specifically for that.
-  const candidates = app.isPackaged
-    ? [
-        path.join(process.resourcesPath, 'icon.ico'),
-        path.join(process.resourcesPath, 'icon.png'),
-      ]
-    : [
-        path.resolve(__dirname, '..', '..', 'resources', 'icon.ico'),
-        path.resolve(__dirname, '..', '..', 'resources', 'icon.png'),
-      ];
-  for (const p of candidates) {
-    if (existsSync(p)) {
-      const img = nativeImage.createFromPath(p);
-      // Force a sane tray size on Windows (system tray expects 16×16).
-      return img.resize({ width: 16, height: 16 });
+  // Reuse the main app icon. nativeImage only decodes ICO on Windows, so
+  // off-Windows the PNG has to come first or we get an empty image.
+  const isWindows = process.platform === 'win32';
+  const names = isWindows ? ['icon.ico', 'icon.png'] : ['icon.png', 'icon.ico'];
+  const dir = app.isPackaged
+    ? process.resourcesPath
+    : path.resolve(__dirname, '..', '..', 'resources');
+  // Windows' notification area expects 16×16; Linux panels (GNOME/KDE) render
+  // status icons at 22×22 and a 16px source looks blurry there.
+  const size = isWindows ? 16 : 22;
+  for (const name of names) {
+    const file = path.join(dir, name);
+    if (existsSync(file)) {
+      return nativeImage.createFromPath(file).resize({ width: size, height: size });
     }
   }
   return nativeImage.createEmpty();

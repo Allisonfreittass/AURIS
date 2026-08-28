@@ -8,12 +8,28 @@ export interface StatusEvent {
   detail?: string;
 }
 
+/**
+ * Who a transcript line came from.
+ *
+ * The sidecar reports the raw stream (`mic` / `loopback`); the main process
+ * maps it to a speaker here. The mapping rests on one assumption worth
+ * stating: the person running Auris is the seller, so their microphone is
+ * `vendedor` and whatever comes out of their speakers is `cliente`.
+ *
+ * `mixed` is the legacy single-stream mode, where the two are summed and
+ * attribution is impossible.
+ */
+export type TranscriptChannel = 'vendedor' | 'cliente' | 'mixed';
+
 export interface TranscriptEvent {
   text: string;
   final: boolean;
   ts: number;
   /** ISO-639-1 code detected by Whisper for this segment (e.g. 'pt', 'en'). */
   lang?: string;
+  /** Which side of the call spoke. Absent on sessions recorded before
+   *  dual-channel capture existed. */
+  channel?: TranscriptChannel;
   /** True when `text` is a translation; `original_text` holds the source. */
   translated?: boolean;
   original_text?: string;
@@ -97,6 +113,70 @@ export interface StoredTranscript {
   ts: number;
   lang?: string;
   translated?: boolean;
+  channel?: TranscriptChannel;
+}
+
+/** One committed action coming out of a call. */
+export interface PostCallNextStep {
+  acao: string;
+  /** Who owns it. 'nos' = the seller's side. */
+  responsavel: 'nos' | 'cliente';
+  /** Only set when a deadline was actually spoken. */
+  prazo: string | null;
+}
+
+/** A resistance the client raised, and what the seller actually answered.
+ *  Deliberately descriptive: v1 records what happened and does not propose
+ *  a better answer. */
+export interface PostCallObjection {
+  objecao: string;
+  resposta_dada: string | null;
+}
+
+export interface PostCallFollowUp {
+  /** Empty when the call gave nothing worth writing about. That is a valid
+   *  outcome, not a generation failure — see `hasFollowUp`. */
+  assunto: string;
+  /** In the language of the call — this is what the seller sends. */
+  corpo: string;
+  /** Portuguese rendering of `corpo`, for display only, filled in when the
+   *  call was not in Portuguese. Never sent; the seller sends `corpo`. */
+  traducao_pt?: string;
+}
+
+/** Metadata that comes from code, never from the model: the clock, the
+ *  channel tags and Whisper's language field. Nothing here can be
+ *  hallucinated. */
+export interface PostCallMeta {
+  /** Epoch ms. */
+  startedAt: number;
+  /** Seconds between first and last transcript line. */
+  durationSec: number;
+  /** Dominant ISO-639-1 code across finals, or null when unknown. */
+  lang: string | null;
+  /** Which speakers actually appear in the transcript. */
+  channels: TranscriptChannel[];
+  /** True when the transcript was too long and only the tail was analyzed. */
+  truncated: boolean;
+}
+
+/** True when there is an actual email to send. Both fields empty means the
+ *  model was asked for a follow-up and correctly declined to invent one. */
+export function hasFollowUp(f: PostCallFollowUp): boolean {
+  return f.corpo.trim().length > 0;
+}
+
+export interface PostCallReport {
+  resumo: string;
+  proximos_passos: PostCallNextStep[];
+  objecoes: PostCallObjection[];
+  follow_up: PostCallFollowUp;
+  meta: PostCallMeta;
+  /** Epoch ms when this report was produced. */
+  generatedAt: number;
+  /** Prompt versions that produced it — so a bad report can be traced back
+   *  to the prompt that wrote it. */
+  promptVersions: { system: number; report: number };
 }
 
 /** A full session as written to disk. One file per session under
@@ -107,6 +187,9 @@ export interface StoredSession {
   updatedAt: number;
   messages: StoredMessage[];
   transcripts: StoredTranscript[];
+  /** Post-call record, present once generated. Absent until the user asks
+   *  for it. */
+  report?: PostCallReport;
 }
 
 /** Lightweight summary for the history list view. Avoids loading every
@@ -119,6 +202,9 @@ export interface SessionSummary {
   transcriptCount: number;
   /** First user/detected question or first transcript line, truncated. */
   preview: string;
+  /** True when a post-call report has already been generated for it. Lets
+   *  the list mark which calls still need one without loading every file. */
+  hasReport: boolean;
 }
 
 export interface AurisApi {
@@ -186,6 +272,14 @@ export interface AurisApi {
 
   /** Remove a session file from history. */
   deleteSession: (id: string) => Promise<void>;
+
+  /** Generate the post-call record for a stored session and persist it into
+   *  that session's file. Reads the transcript from disk rather than taking
+   *  it as an argument, so there is one source of truth. Returns the report
+   *  or a reason it could not be produced. */
+  generatePostCall: (
+    sessionId: string,
+  ) => Promise<{ ok: true; report: PostCallReport } | { ok: false; error: string }>;
 
   // Mode control — manual (user-driven) or auto (question-detection).
   getMode: () => Promise<AurisMode>;

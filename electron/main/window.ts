@@ -15,17 +15,16 @@ const WINDOW_HEIGHT = 680;
  * the repo root under `resources/`.
  */
 function resolveAppIcon(): Electron.NativeImage | undefined {
-  const candidates = app.isPackaged
-    ? [
-        path.join(process.resourcesPath, 'icon.ico'),
-        path.join(process.resourcesPath, 'icon.png'),
-      ]
-    : [
-        path.resolve(__dirname, '..', '..', 'resources', 'icon.ico'),
-        path.resolve(__dirname, '..', '..', 'resources', 'icon.png'),
-      ];
-  for (const p of candidates) {
-    if (existsSync(p)) return nativeImage.createFromPath(p);
+  // nativeImage decodes ICO on Windows only — elsewhere an .ico path returns
+  // an empty image, so the PNG has to be tried first off-Windows.
+  const names =
+    process.platform === 'win32' ? ['icon.ico', 'icon.png'] : ['icon.png', 'icon.ico'];
+  const dir = app.isPackaged
+    ? process.resourcesPath
+    : path.resolve(__dirname, '..', '..', 'resources');
+  for (const name of names) {
+    const file = path.join(dir, name);
+    if (existsSync(file)) return nativeImage.createFromPath(file);
   }
   return undefined;
 }

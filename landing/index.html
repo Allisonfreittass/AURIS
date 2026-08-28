@@ -4,22 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
-    <title>Auris — assistente em tempo real</title>
+    <title>Auris — cada call vira resumo e follow-up</title>
     <meta
       name="description"
-      content="Auris é um assistente desktop que ouve o áudio do seu PC em qualquer idioma, traduz pra português em tempo real e responde perguntas sobre o que você está assistindo, ouvindo ou conversando."
+      content="O Auris ouve as reuniões do seu time comercial pelo áudio do computador, sem bot na sala, e transforma cada call em resumo, próximos passos, objeções e um e-mail de follow-up pronto."
     />
-    <meta property="og:title" content="Auris — assistente em tempo real" />
+    <meta property="og:title" content="Auris — cada call vira resumo e follow-up" />
     <meta
       property="og:description"
-      content="Um assistente que escuta junto com você — em qualquer idioma."
+      content="Cada call do seu time vira resumo, próximos passos e follow-up pronto. Sem bot na reunião."
     />
     <meta property="og:type" content="website" />
 
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
-    <meta name="theme-color" content="#1a6cf0" />
+    <meta name="theme-color" content="#0B0D10" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -30,229 +30,379 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <!-- Faint grid background — signature of the brand identity. -->
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
     <div class="bg-grid" aria-hidden="true"></div>
 
     <header class="nav">
       <div class="brand">
-        <!-- EQ-bars mark, same as the desktop app. -->
         <svg class="brand-mark" viewBox="0 0 56 56" fill="none" aria-hidden="true">
-          <rect x="10" y="24" width="4" height="20" rx="1" fill="#1a6cf0" opacity="0.4" />
-          <rect x="17" y="16" width="4" height="28" rx="1" fill="#1a6cf0" opacity="0.65" />
-          <rect x="24" y="10" width="4" height="36" rx="1" fill="#1a6cf0" />
+          <rect x="10" y="24" width="4" height="20" rx="1" fill="#4C8DFF" opacity="0.4" />
+          <rect x="17" y="16" width="4" height="28" rx="1" fill="#4C8DFF" opacity="0.65" />
+          <rect x="24" y="10" width="4" height="36" rx="1" fill="#4C8DFF" />
           <rect x="31" y="16" width="4" height="28" rx="1" fill="#0db8a0" opacity="0.8" />
           <rect x="38" y="22" width="4" height="22" rx="1" fill="#0db8a0" opacity="0.5" />
         </svg>
         <span class="brand-text">Auris<span class="brand-dot">.</span></span>
       </div>
       <nav class="nav-links">
-        <a href="#features">Como funciona</a>
+        <a href="#como-funciona">Como funciona</a>
+        <a href="#preco">Preço</a>
         <a href="./changelog.html">Changelog</a>
-        <a href="#download" class="cta-link">Baixar</a>
+        <a href="#baixar" class="cta-link">Baixar</a>
       </nav>
     </header>
 
-    <main>
-      <section class="hero">
-        <span class="eyebrow">Beta · Windows · Grátis</span>
-        <h1>
-          Assistente em tempo real <em>que escuta junto</em> com você.
-        </h1>
-        <p class="lead">
-          Auris ouve o áudio do seu PC — vídeo, podcast, chamada — em
-          <em class="lead-em">qualquer idioma</em>, traduz pra português
-          conforme a fala chega, e responde perguntas sobre o que está
-          rolando. No modo automático, detecta perguntas feitas a você no
-          áudio e sugere uma resposta articulada na hora.
-        </p>
+    <main id="conteudo">
+      <!-- ── Hero ─────────────────────────────────────────────────────── -->
+      <section class="band band-hero">
+        <div class="wrap">
+          <div class="hero-copy reveal">
+            <h1>Cada call do seu time vira resumo, próximos passos e follow-up pronto.</h1>
+            <p class="lede">
+              Você não esteve na reunião e, uma semana depois, ninguém sabe
+              direito o que foi combinado — nem se o follow-up saiu. O Auris
+              registra cada call sem entrar nela.
+            </p>
+            <div class="cta-row" id="baixar">
+              <a class="cta-primary" href="#download-link" id="downloadBtn">
+                <span data-download-label>Baixar</span>
+              </a>
+              <a class="cta-secondary" href="#contato-link" data-contact-link>
+                Falar com a gente
+              </a>
+            </div>
+            <p class="cta-note" data-download-note></p>
+          </div>
 
-        <div class="cta-row" id="download">
-          <a class="cta-primary" href="#download-link" id="downloadBtn">
-            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-              <path
-                d="M7 1.5v8M3 6l4 4 4-4M2 12.5h10"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                fill="none"
+          <figure class="shot reveal">
+            <div class="shot-frame">
+              <img
+                src="./screenshot-call.png"
+                alt="Tela do Auris mostrando o registro de uma call: resumo, próximos passos e objeções."
+                width="900"
+                height="1035"
+                loading="lazy"
               />
-            </svg>
-            Baixar para Windows
-            <span class="cta-meta">.exe · ~100 MB</span>
-          </a>
-          <span class="cta-note">
-            requer Windows 10/11 · sem assinatura digital — Windows pode pedir
-            "Executar mesmo assim"
-          </span>
+            </div>
+            <figcaption>O registro de uma call, como ele aparece no app.</figcaption>
+          </figure>
         </div>
+      </section>
 
-        <div class="hero-mock">
-          <div class="mock-frame">
-            <div class="mock-bar">
-              <div class="mock-brand">
-                <svg width="14" height="14" viewBox="0 0 56 56" fill="none" aria-hidden="true">
-                  <rect x="10" y="24" width="4" height="20" rx="1" fill="#1a6cf0" opacity="0.4" />
-                  <rect x="17" y="16" width="4" height="28" rx="1" fill="#1a6cf0" opacity="0.65" />
-                  <rect x="24" y="10" width="4" height="36" rx="1" fill="#1a6cf0" />
-                  <rect x="31" y="16" width="4" height="28" rx="1" fill="#0db8a0" opacity="0.8" />
-                  <rect x="38" y="22" width="4" height="22" rx="1" fill="#0db8a0" opacity="0.5" />
-                </svg>
-                <span class="mock-brand-text">Auris<span class="brand-dot">.</span></span>
-              </div>
-              <div class="mock-status">
-                <span class="mock-status-dot"></span>
-                <span>ouvindo · EN→PT</span>
-              </div>
-            </div>
-            <div class="mock-content">
-              <div class="mock-section-label">Transcrição</div>
-              <div class="mock-transcript">
-                <span class="mock-translate-badge">↻ EN</span>
-                ...e como funciona o protocolo de consenso?
-              </div>
+      <!-- ── Pra quem é ───────────────────────────────────────────────── -->
+      <section class="band band-fill reveal">
+        <div class="wrap">
+          <span class="eyebrow">Pra quem é</span>
+          <h2>Times que vendem por reunião.</h2>
+          <ul class="who">
+            <li>
+              <strong>Consultoria e agência.</strong> Reuniões longas, com muito
+              combinado que não cabe na memória de ninguém.
+            </li>
+            <li>
+              <strong>Software house e SaaS.</strong> Call técnica onde a
+              objeção de hoje é a mesma que apareceu na semana passada.
+            </li>
+            <li>
+              <strong>Imobiliária, corretora, escola.</strong> Vendedor que
+              fecha no telefone e não tem tempo de escrever nada depois.
+            </li>
+          </ul>
+        </div>
+      </section>
 
-              <div class="mock-section-label" style="color: rgba(26,108,240,0.6);">Sugestão Auris</div>
-              <div class="mock-response">
-                O palestrante explica que <strong>consenso</strong> em
-                sistemas distribuídos depende de um quórum de nós que
-                concordem com o estado atual. Cita o algoritmo <strong>Raft</strong>
-                como exemplo prático.
-              </div>
+      <!-- ── Como funciona ────────────────────────────────────────────── -->
+      <section class="band reveal" id="como-funciona">
+        <div class="wrap">
+          <span class="eyebrow">Como funciona</span>
+          <h2>Três passos, nenhum bot na sala.</h2>
+          <ol class="steps">
+            <li>
+              <span class="step-n">01</span>
+              <h3>O vendedor abre a reunião onde já abre hoje.</h3>
+              <p>
+                Meet, Teams, Zoom, WhatsApp no computador. O Auris fica numa
+                janela ao lado e ele clica em Iniciar.
+              </p>
+            </li>
+            <li>
+              <span class="step-n">02</span>
+              <h3>O Auris ouve o áudio do computador.</h3>
+              <p>
+                Não entra na chamada e não aparece na lista de participantes.
+                Ele escuta a saída de áudio da máquina e o microfone do
+                vendedor, em separado.
+              </p>
+            </li>
+            <li>
+              <span class="step-n">03</span>
+              <h3>Ao encerrar, é só gerar o registro.</h3>
+              <p>
+                Resumo, próximos passos, objeções e o e-mail de follow-up
+                aparecem na tela de calls, prontos para revisar.
+              </p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ── O que fica registrado ────────────────────────────────────── -->
+      <section class="band band-fill reveal">
+        <div class="wrap">
+          <span class="eyebrow">O que fica registrado</span>
+          <h2>Quatro coisas por call.</h2>
+          <dl class="artifacts">
+            <div>
+              <dt>Resumo</dt>
+              <dd>
+                Cinco a oito linhas do que foi tratado e onde a conversa parou.
+                É o que deixa você entender a reunião sem ter estado nela.
+              </dd>
             </div>
+            <div>
+              <dt>Próximos passos</dt>
+              <dd>
+                Cada ação com o responsável e o prazo, quando o prazo foi dito
+                em voz alta. Se ninguém combinou nada, o registro diz isso — que
+                é a informação mais útil que uma call pode devolver.
+              </dd>
+            </div>
+            <div>
+              <dt>Objeções</dt>
+              <dd>
+                O que o cliente levantou e o que o vendedor respondeu. Lido em
+                série, é onde aparecem os padrões que se repetem no time.
+              </dd>
+            </div>
+            <div>
+              <dt>Follow-up pronto</dt>
+              <dd>
+                Um e-mail curto retomando o que foi combinado. O vendedor copia,
+                revisa e envia. O Auris nunca envia nada sozinho.
+              </dd>
+            </div>
+          </dl>
+          <figure class="shot shot-inline">
+            <div class="shot-frame">
+              <img
+                src="./screenshot-followup.png"
+                alt="Card do e-mail de follow-up gerado pelo Auris, com botão de copiar."
+                width="600"
+                height="194"
+                loading="lazy"
+              />
+            </div>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── Durante a call ───────────────────────────────────────────── -->
+      <section class="band reveal">
+        <div class="wrap split">
+          <div>
+            <span class="eyebrow">Durante a call</span>
+            <h2>E enquanto a reunião acontece.</h2>
+            <p class="body">
+              A transcrição aparece ao vivo na janela ao lado. O vendedor pode
+              perguntar sobre o que já foi dito sem interromper ninguém, e o que
+              está em outro idioma chega traduzido.
+            </p>
+            <p class="body">
+              Cada linha fica marcada com quem falou. É isso que separa a
+              objeção do cliente da resposta do vendedor quando o registro é
+              gerado no fim.
+            </p>
+          </div>
+          <figure class="shot">
+            <div class="shot-frame">
+              <img
+                src="./screenshot-transcricao.png"
+                alt="Transcrição ao vivo no Auris, com cada linha marcada como vendedor ou cliente."
+                width="640"
+                height="900"
+                loading="lazy"
+              />
+            </div>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── Vende pra fora ───────────────────────────────────────────── -->
+      <section class="band band-tight reveal">
+        <div class="wrap">
+          <span class="eyebrow">Vende pra fora?</span>
+          <h2>Reunião em inglês, registro em português.</h2>
+          <p class="body">
+            A fala do cliente estrangeiro chega traduzida enquanto ele fala. No
+            fim, o resumo sai em português para você ler e o e-mail de follow-up
+            sai no idioma da call para o vendedor enviar.
+          </p>
+        </div>
+      </section>
+
+      <!-- ── Privacidade ──────────────────────────────────────────────── -->
+      <section class="band band-fill reveal" id="privacidade">
+        <div class="wrap">
+          <span class="eyebrow">Privacidade</span>
+          <h2>O que acontece com o áudio.</h2>
+          <ul class="privacy">
+            <li>
+              <strong>O áudio não é gravado.</strong> Ele é enviado a um
+              provedor externo para virar texto e descartado em seguida. Nenhum
+              arquivo de áudio fica na sua máquina nem em servidor nosso.
+              <span class="flag">[VERIFICAR JURÍDICO]</span>
+            </li>
+            <li>
+              <strong>O texto passa por esse mesmo provedor.</strong> Quando o
+              registro é gerado, quando uma fala é traduzida e quando o vendedor
+              pergunta algo durante a call, o trecho da transcrição é enviado
+              para lá. Ele não fica armazenado no provedor.
+              <span class="flag">[VERIFICAR JURÍDICO]</span>
+            </li>
+            <li>
+              <strong>As transcrições e os registros ficam no computador do
+              vendedor</strong>, em arquivos da própria máquina. Não guardamos
+              nada disso em servidor nosso — e a consequência é que o histórico
+              não acompanha quem troca de computador.
+            </li>
+            <li>
+              <strong>Sua conta guarda só login e plano.</strong> Nenhum
+              conteúdo de call fica associado a ela.
+            </li>
+            <li>
+              <strong>Qualquer call pode ser apagada</strong> do histórico a
+              qualquer momento, pelo próprio app.
+            </li>
+            <li>
+              <strong>O Auris não envia e-mail sozinho.</strong> Tudo que sai em
+              nome do vendedor passa por ele antes.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ── Preço ────────────────────────────────────────────────────── -->
+      <section class="band reveal" id="preco">
+        <div class="wrap">
+          <span class="eyebrow">Preço</span>
+          <h2>Um plano, por vendedor.</h2>
+          <div class="price-card">
+            <p class="price">
+              <span class="price-currency">R$</span>
+              <span class="price-value" data-price>129</span>
+              <span class="price-unit">por vendedor / mês</span>
+            </p>
+            <p class="body">Teste de 14 dias. Sem plano grátis.</p>
+            <a class="cta-primary" href="#contato-link" data-contact-link>
+              Falar sobre o teste
+            </a>
+            <p class="cta-note">
+              A cobrança ainda não está automatizada — o teste é combinado por
+              e-mail.
+            </p>
           </div>
         </div>
       </section>
 
-      <section class="features" id="features">
-        <div class="section-header">
-          <span class="section-num">01</span>
-          <h2>Três jeitos de usar.</h2>
-        </div>
-
-        <div class="feature-grid">
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
-                <path d="M4 12h16M12 4l8 8-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </div>
-            <h3>Modo Pergunta</h3>
-            <p>
-              Você digita o que quer saber sobre o áudio que está tocando.
-              Auris responde usando a transcrição em tempo real como contexto.
-            </p>
-            <ul>
-              <li>"Resume os últimos 30 segundos"</li>
-              <li>"Qual o ponto principal?"</li>
-              <li>"O que ele acabou de citar?"</li>
-            </ul>
-          </article>
-
-          <article class="feature-card">
-            <div class="feature-icon feature-icon-live" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
-                <rect x="10" y="3" width="4" height="10" rx="2" stroke="currentColor" stroke-width="1.6" />
-                <path d="M6 13a6 6 0 0012 0M12 19v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-              </svg>
-            </div>
-            <h3>Modo Auto</h3>
-            <p>
-              Auris detecta quando alguém te faz uma pergunta no áudio
-              (entrevista, reunião, debate, sales call) e sugere uma resposta
-              articulada que você pode adaptar e dizer em voz alta.
-            </p>
-            <ul>
-              <li>Entrevistas com vídeo de fundo</li>
-              <li>Sales calls com pergunta surpresa</li>
-              <li>Reuniões com perguntas técnicas pesadas</li>
-            </ul>
-          </article>
-
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
-                <path d="M3 5h11M3 5l3-3M3 5l3 3M21 19h-11M21 19l-3-3M21 19l-3 3M14 8.5l-4 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </div>
-            <h3>Tradução automática <span class="badge">novo</span></h3>
-            <p>
-              Áudio em inglês, espanhol, francês ou outro idioma? Auris
-              traduz a transcrição pra português conforme a fala chega — e
-              a resposta do assistente já vem no idioma que você escolheu.
-            </p>
-            <ul>
-              <li>Cursos e palestras em inglês</li>
-              <li>Podcasts internacionais</li>
-              <li>Reuniões com cliente estrangeiro</li>
-            </ul>
-          </article>
-        </div>
-      </section>
-
-      <section class="trust">
-        <div class="section-header">
-          <span class="section-num">02</span>
-          <h2>Como funciona por dentro</h2>
-        </div>
-        <div class="trust-grid">
-          <div class="trust-item">
-            <strong>Áudio do sistema, sem mic</strong>
-            <p>Captura via WASAPI loopback. Sem confusão entre sua voz e o que toca.</p>
-          </div>
-          <div class="trust-item">
-            <strong>Transcrição multilíngue</strong>
-            <p>Whisper-large-v3-turbo detecta o idioma sozinho — você não configura nada.</p>
-          </div>
-          <div class="trust-item">
-            <strong>Tradução em tempo real</strong>
-            <p>Llama 3.3 70B traduz cada trecho final assim que ele é transcrito.</p>
-          </div>
-          <div class="trust-item">
-            <strong>Modo flutuante</strong>
-            <p>Minimize a janela e Auris vira um ícone discreto sempre no topo, sem roubar foco.</p>
-          </div>
-          <div class="trust-item">
-            <strong>Histórico acumulativo</strong>
-            <p>Tudo que foi dito fica no painel — role pra cima e leia o que perdeu.</p>
-          </div>
-          <div class="trust-item">
-            <strong>Conta cifrada localmente</strong>
-            <p>Sessão Supabase guardada com a API segura do Windows (DPAPI).</p>
+      <!-- ── FAQ ──────────────────────────────────────────────────────── -->
+      <section class="band band-fill reveal" id="faq">
+        <div class="wrap">
+          <span class="eyebrow">Perguntas</span>
+          <h2>O que costumam perguntar.</h2>
+          <div class="faq">
+            <details>
+              <summary>Precisa de bot entrando na reunião?</summary>
+              <p>
+                Não. O Auris captura o áudio que sai do computador do vendedor.
+                Ninguém na chamada vê um participante a mais.
+              </p>
+            </details>
+            <details>
+              <summary>Funciona com Meet, Teams, Zoom, WhatsApp?</summary>
+              <p>
+                Funciona com qualquer um deles, porque não depende da plataforma
+                da reunião — depende do áudio do computador.
+              </p>
+            </details>
+            <details>
+              <summary>Funciona no Mac?</summary>
+              <p>
+                Ainda não. Hoje existe versão para Windows e para Linux. Mac
+                está fora por enquanto.
+              </p>
+            </details>
+            <details>
+              <summary>Preciso usar fone de ouvido?</summary>
+              <p>
+                Recomendamos. É com fone que o Auris consegue separar o que o
+                vendedor falou do que o cliente falou. Sem fone, a voz do
+                cliente volta pelo microfone e essa separação fica pior.
+              </p>
+            </details>
+            <details>
+              <summary>O áudio da reunião fica gravado?</summary>
+              <p>
+                Não. O áudio vira texto e é descartado; nenhum arquivo de som é
+                guardado. O texto fica no computador do vendedor, e passa pelo
+                provedor de transcrição em trânsito.
+                <span class="flag">[VERIFICAR JURÍDICO]</span>
+              </p>
+            </details>
+            <details>
+              <summary>Posso apagar tudo?</summary>
+              <p>
+                Sim. Cada call pode ser excluída pelo app, e os arquivos ficam
+                na máquina do vendedor.
+              </p>
+            </details>
+            <details>
+              <summary>Integra com CRM?</summary>
+              <p>
+                Ainda não. Hoje o follow-up e o resumo são copiados do app para
+                onde você quiser.
+              </p>
+            </details>
+            <details>
+              <summary>O cliente precisa saber que a reunião está sendo transcrita?</summary>
+              <p>
+                Avisar é a prática que recomendamos, e em muitos casos é
+                exigência legal. Confirme a regra que se aplica ao seu negócio
+                antes de usar. <span class="flag">[VERIFICAR JURÍDICO]</span>
+              </p>
+            </details>
           </div>
         </div>
       </section>
 
-      <section class="final-cta">
-        <h2>Experimente agora.</h2>
-        <p>Beta gratuita. Sem cartão. Crie conta com email e use à vontade.</p>
-        <a class="cta-primary" href="#download-link">
-          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-            <path
-              d="M7 1.5v8M3 6l4 4 4-4M2 12.5h10"
-              stroke="currentColor"
-              stroke-width="1.6"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              fill="none"
-            />
-          </svg>
-          Baixar Auris para Windows
-        </a>
+      <!-- ── CTA final ────────────────────────────────────────────────── -->
+      <section class="band final reveal">
+        <div class="wrap">
+          <h2>Instale e rode na próxima reunião.</h2>
+          <div class="cta-row">
+            <a class="cta-primary" href="#download-link">
+              <span data-download-label>Baixar</span>
+            </a>
+          </div>
+          <p class="cta-note" data-download-note></p>
+        </div>
       </section>
     </main>
 
     <footer>
       <div class="footer-brand">
         <span>Auris<span class="brand-dot">.</span></span>
-        <span class="footer-sep">·</span>
-        <span>beta</span>
       </div>
       <div class="footer-links">
-        <a href="mailto:hi@auris.app">contato</a>
-        <a href="#">privacidade</a>
+        <a href="#contato-link" data-contact-link>contato</a>
+        <a href="#privacidade">privacidade</a>
         <a href="#">termos</a>
+        <a href="./changelog.html">changelog</a>
+        <a href="#baixar">download</a>
       </div>
+      <p class="footer-note">
+        Também dá pra usar com vídeos e cursos, mas o Auris é feito para
+        reuniões comerciais.
+      </p>
     </footer>
 
     <script src="./main.js"></script>

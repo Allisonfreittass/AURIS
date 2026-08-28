@@ -1,7 +1,7 @@
 import { app } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { SessionSummary, StoredSession } from '../../shared/ipc';
+import type { PostCallReport, SessionSummary, StoredSession } from '../../shared/ipc';
 
 const MAX_SUMMARIES = 100;
 const PREVIEW_MAX_CHARS = 120;
@@ -50,7 +50,16 @@ export function saveSession(session: StoredSession): void {
   // schedules a save before anything actually happened.
   if (session.messages.length === 0 && session.transcripts.length === 0) return;
   try {
-    fs.writeFileSync(sessionPath(session.id), JSON.stringify(session), { mode: 0o600 });
+    // The renderer owns messages/transcripts but knows nothing about the
+    // post-call report, so it sends the session back without one. Writing
+    // that verbatim would erase a report on the next autosave tick — carry
+    // any existing one forward.
+    const existing = getSession(session.id);
+    const merged: StoredSession =
+      existing?.report && !session.report
+        ? { ...session, report: existing.report }
+        : session;
+    fs.writeFileSync(sessionPath(session.id), JSON.stringify(merged), { mode: 0o600 });
   } catch (err) {
     console.warn('[history] failed to write session:', (err as Error).message);
   }
@@ -68,6 +77,23 @@ export function getSession(id: string): StoredSession | null {
   } catch (err) {
     console.warn(`[history] failed to read session ${id}:`, (err as Error).message);
     return null;
+  }
+}
+
+/** Attach a generated post-call report to a stored session. Read-modify-write
+ *  so the report survives alongside whatever the renderer last saved; the
+ *  renderer never sends the report back up, so a plain upsert from its side
+ *  would drop it. */
+export function saveReport(id: string, report: PostCallReport): boolean {
+  const session = getSession(id);
+  if (!session) return false;
+  session.report = report;
+  try {
+    fs.writeFileSync(sessionPath(id), JSON.stringify(session), { mode: 0o600 });
+    return true;
+  } catch (err) {
+    console.warn(`[history] failed to write report for ${id}:`, (err as Error).message);
+    return false;
   }
 }
 
@@ -109,6 +135,7 @@ export function listSessions(): SessionSummary[] {
         messageCount: s.messages?.length ?? 0,
         transcriptCount: s.transcripts?.length ?? 0,
         preview: derivePreview(s),
+        hasReport: Boolean(s.report),
       });
     } catch {
       // skip unreadable / corrupt files

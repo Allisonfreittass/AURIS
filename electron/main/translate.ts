@@ -3,14 +3,15 @@
  * pipeline used for chat responses. Runs as a small focused chat call
  * with a translator system prompt.
  *
- * Cost & latency: each call is one extra Llama 3.3 70B request per final.
- * At ~5–10 finals per minute of speech that's 5–10 extra requests/min,
- * well below the free tier's ~30 req/min. Latency is the same ~400-800ms
- * a normal LLM ask takes — we don't block the UI; the transcript event
- * just shows up a moment after the original.
+ * Cost & latency: one extra chat request per final (see MODEL_REALTIME).
+ * At ~5-10 finals per minute that is 5-10 extra requests/min per channel —
+ * and dual capture runs two channels, so budget for double. Latency is the
+ * same ~400-800ms a normal ask takes; we don't block the UI, the transcript
+ * event just shows up a moment after the original.
  */
 import Groq from 'groq-sdk';
 import type { AuthConfig } from './secrets';
+import { MODEL_REALTIME } from './models';
 
 const SYSTEM = `You are a precise transcription translator. Translate the user's text to {{TARGET}}, preserving meaning, tone, names, technical terms, and numbers. Do NOT add commentary, explanations, or quotes around the output. Return ONLY the translated text.`;
 
@@ -44,7 +45,7 @@ export async function translateText(
 
   const client = buildClient(auth);
   const completion = await client.chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
+    model: MODEL_REALTIME,
     max_tokens: Math.min(500, text.length * 4),
     temperature: 0.1,
     stream: false,

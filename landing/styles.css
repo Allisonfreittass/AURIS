@@ -1,606 +1,679 @@
-/* ── Variables (mirror the Auris desktop palette + corporate identity) ─ */
+/*
+ * Auris — landing.
+ *
+ * Tokens copied verbatim from the desktop app (src/index.css). The two
+ * repositories do not share a build, so this is a copy rather than an
+ * import: when the app's tokens change, change them here too.
+ *
+ * `--text-muted` and `--text-label` are the accessibility-corrected values,
+ * not the original design ones — the originals failed WCAG AA on the darker
+ * panels. See the note in the app's token file.
+ *
+ * Type rule, same as the app: mono uppercase is chrome (eyebrows, labels,
+ * buttons); everything a person reads is sans in normal case.
+ */
+
 :root {
-  --bg:        #0a0c0f;
-  --surface:   #161a20;
-  --elevated:  #1f2530;
-  --raised:    #252d38;
-  --rule:      #252d38;
-  --hairline:  #1f2530;
+  --bg-app: #0b0d10;
+  --bg-panel: #12151a;
+  --bg-elevated: #171b21;
+  --border: #232830;
+  --border-subtle: #1a1e25;
 
-  --text:      #ffffff;
-  --light:     #c8d4e0;
-  --subtle:    #8a9ab0;
-  --muted:     #5a6880;
-  --faint:     #3a4555;
+  --text-primary: #e6e8eb;
+  --text-secondary: #9aa1ac;
+  --text-muted: #8b939e;
+  --text-label: #7b838f;
 
-  --accent:        #1a6cf0;
-  --accent-bright: #4a8cff;
-  --accent-deep:   #0f4ab0;
-  --accent-tint:   rgba(26, 108, 240, 0.08);
-  --accent-ink:    #ffffff;
+  --accent: #4c8dff;
+  --accent-soft: rgba(76, 141, 255, 0.12);
 
-  --live:      #0db8a0;
-  --live-deep: #088a78;
-
-  --paper:     #f0f3f7;
-  --danger:    #f06060;
+  --measure: 62ch;
+  --gutter: 24px;
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html {
   scroll-behavior: smooth;
-  color-scheme: dark;
 }
 
 body {
-  background: var(--bg);
-  color: var(--text);
+  margin: 0;
+  background: var(--bg-app);
+  color: var(--text-primary);
   font-family: 'Epilogue', -apple-system, system-ui, sans-serif;
-  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  font-size: 17px;
+  line-height: 1.7;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
-  overflow-x: hidden;
-  position: relative;
-  min-height: 100vh;
 }
 
-::selection {
-  background: rgba(26, 108, 240, 0.28);
-  color: var(--text);
-}
-
-/* ── Background grid — signature of the corporate-system identity ───── */
+/* Faint grid — the brand's 64px module, kept very quiet. */
 .bg-grid {
   position: fixed;
   inset: 0;
+  z-index: -1;
   pointer-events: none;
-  z-index: 0;
   background-image:
-    linear-gradient(rgba(37, 45, 56, 0.5) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(37, 45, 56, 0.5) 1px, transparent 1px);
+    linear-gradient(var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
   background-size: 64px 64px;
-  opacity: 0.35;
-  /* Soft fade at the edges so the grid doesn't dominate. */
-  mask-image: radial-gradient(circle at center, black 40%, transparent 90%);
-  -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 90%);
+  opacity: 0.55;
 }
 
-/* ── Nav ─────────────────────────────────────────────────────────────── */
-.nav {
-  position: relative;
+/* ── chrome voice ─────────────────────────────────────────────────────── */
+
+.eyebrow,
+.cta-primary,
+.cta-secondary,
+.cta-link,
+.step-n,
+.footer-links a,
+.nav-links a {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.eyebrow {
+  display: block;
+  color: var(--text-label);
+  margin-bottom: 12px;
+}
+
+/* ── links & focus ────────────────────────────────────────────────────── */
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 4px;
   z-index: 10;
+}
+.skip-link:focus {
+  left: 8px;
+}
+
+/* ── nav ──────────────────────────────────────────────────────────────── */
+
+.nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 32px;
-  max-width: 1200px;
+  gap: 16px;
+  padding: 20px var(--gutter);
+  max-width: 1120px;
   margin: 0 auto;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
 }
+
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
 }
 .brand-mark {
   width: 24px;
   height: 24px;
 }
 .brand-text {
-  font-family: 'Epilogue', sans-serif;
+  font-size: 17px;
   font-weight: 600;
-  font-size: 18px;
-  letter-spacing: -0.005em;
-  color: var(--text);
-  line-height: 1;
+  letter-spacing: -0.01em;
 }
 .brand-dot {
   color: var(--accent);
 }
+
 .nav-links {
   display: flex;
-  gap: 24px;
   align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
 }
 .nav-links a {
-  color: var(--subtle);
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 500;
-  transition: color 0.2s;
+  color: var(--text-label);
 }
 .nav-links a:hover {
-  color: var(--text);
+  color: var(--text-primary);
+  text-decoration: none;
 }
-.nav-links a.cta-link {
+.nav-links .cta-link {
   color: var(--accent);
-  border: 1px solid rgba(26, 108, 240, 0.3);
-  padding: 7px 14px;
-  border-radius: 2px;
-  background: rgba(26, 108, 240, 0.06);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-}
-.nav-links a.cta-link:hover {
-  background: rgba(26, 108, 240, 0.14);
-  border-color: rgba(26, 108, 240, 0.55);
 }
 
+/* ── layout ───────────────────────────────────────────────────────────── */
+
+/* `main` spans the full width so a section can carry a background edge to
+ * edge; the measure is restored by `.wrap` inside each one. Doing it this
+ * way instead of the usual 100vw break-out trick avoids the horizontal
+ * overflow that 100vw causes once a scrollbar is present. */
 main {
-  position: relative;
-  z-index: 1;
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 0 32px;
+  width: 100%;
 }
 
-/* ── Hero ────────────────────────────────────────────────────────────── */
-.hero {
-  padding: 60px 0 80px;
-  text-align: center;
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
 }
-.eyebrow {
-  display: inline-block;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
-  color: var(--muted);
-  padding: 6px 12px;
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  margin-bottom: 28px;
+
+h1,
+h2,
+h3 {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin: 0;
+  text-wrap: balance;
 }
+
 h1 {
-  font-family: 'Epilogue', sans-serif;
-  font-weight: 600;
-  font-size: clamp(38px, 6vw, 64px);
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-  margin-bottom: 24px;
-  color: var(--text);
+  font-size: clamp(32px, 5vw, 46px);
+  line-height: 1.15;
+  max-width: 18ch;
 }
-h1 em {
-  font-style: normal;
-  font-weight: 600;
-  color: var(--accent);
+
+h2 {
+  font-size: clamp(24px, 3vw, 30px);
+  line-height: 1.25;
+  margin-bottom: 20px;
+  max-width: 22ch;
 }
-.lead {
-  font-size: 16px;
-  line-height: 1.65;
-  color: var(--subtle);
-  max-width: 620px;
-  margin: 0 auto 40px;
-  font-weight: 400;
+
+h3 {
+  font-size: 17px;
+  line-height: 1.4;
+  margin-bottom: 4px;
 }
-.lead-em {
-  font-style: normal;
-  color: var(--text);
-  font-weight: 500;
-  border-bottom: 1px solid var(--accent);
-  padding-bottom: 1px;
+
+p {
+  margin: 0 0 16px;
+  max-width: var(--measure);
+}
+
+.body,
+.lede {
+  color: var(--text-primary);
+}
+.lede {
+  font-size: 18px;
+  color: var(--text-secondary);
+  margin-top: 20px;
+}
+
+.band {
+  padding: 72px 0;
+  border-top: 1px solid var(--border-subtle);
+}
+.band-tight {
+  padding: 56px 0;
+}
+.band-hero {
+  border-top: none;
+  padding: 80px 0 88px;
+}
+
+/* Value, not decoration. Every section on the same ground made the page read
+ * as one long column; banding a few in the panel tone gives the eye somewhere
+ * to land without adding a single gradient or glow. */
+.band-fill {
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* ── hero ─────────────────────────────────────────────────────────────── */
+
+/* Copy first, screenshot below at its natural size.
+ *
+ * Side by side, the shot had to fit a ~465px column and was displayed at
+ * 0.73 of its pixel size — a non-integer downscale that softens every glyph
+ * and turns the record into grey mush. Stacking gives it the full measure,
+ * so it renders close to 1:1 and stays legible. The artifact is the
+ * argument here; it earns the width. */
+.hero-copy {
+  max-width: 780px;
 }
 
 .cta-row {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 80px;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
 }
-.cta-primary {
+
+.cta-primary,
+.cta-secondary {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  padding: 12px 20px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+.cta-primary {
   background: var(--accent);
-  color: var(--accent-ink);
-  font-family: 'Epilogue', sans-serif;
-  font-weight: 600;
-  font-size: 14px;
-  padding: 13px 22px;
-  border-radius: 2px;
-  text-decoration: none;
-  border: 1px solid var(--accent);
-  transition: all 0.18s;
+  color: #fff;
 }
 .cta-primary:hover {
-  background: var(--accent-bright);
-  border-color: var(--accent-bright);
-  transform: translateY(-1px);
+  opacity: 0.9;
+  text-decoration: none;
 }
-.cta-meta {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  opacity: 0.7;
-  margin-left: 6px;
-  padding-left: 12px;
-  border-left: 1px solid currentColor;
+/* A button with nothing behind it. Still legible, visibly not clickable. */
+.cta-primary.is-disabled,
+.cta-secondary.is-disabled {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-label);
+  cursor: not-allowed;
+  pointer-events: none;
 }
+
+.cta-secondary {
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+.cta-secondary:hover {
+  background: var(--bg-panel);
+  text-decoration: none;
+}
+
 .cta-note {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.05em;
-  color: var(--muted);
-  max-width: 520px;
-  line-height: 1.55;
-  text-transform: uppercase;
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+.note-alt {
+  display: block;
+  margin-top: 6px;
 }
 
-/* ── Mock UI preview ─────────────────────────────────────────────────── */
-.hero-mock {
-  margin-top: 0;
-  display: flex;
-  justify-content: center;
+/* ── screenshot ───────────────────────────────────────────────────────── */
+
+.shot {
+  margin: 56px 0 0;
+  max-width: 900px;
 }
-.mock-frame {
-  width: 100%;
-  max-width: 560px;
-  background: var(--bg);
-  border: 1px solid var(--rule);
-  border-radius: 4px;
+.shot-inline {
+  margin-top: 36px;
+  max-width: 600px;
+}
+.shot-inline .shot-frame {
+  box-shadow: none;
+}
+
+/* Text beside the product, not above it — the one section where the picture
+ * is the evidence for the sentence next to it. */
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: 48px;
+  align-items: start;
+}
+.split .shot {
+  margin: 0;
+}
+.shot-frame {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-panel);
   overflow: hidden;
-  position: relative;
-  /* Top hairline accent — signature blue line. */
+  /* Elevation only, no colour. */
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
 }
-.mock-frame::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(26, 108, 240, 0.6), transparent);
-  z-index: 2;
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
-.mock-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--rule);
-  background: var(--surface);
-}
-.mock-brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.mock-brand-text {
-  font-family: 'Epilogue', sans-serif;
-  font-weight: 600;
-  font-size: 12px;
-  color: var(--text);
-  line-height: 1;
-  letter-spacing: -0.005em;
-}
-.mock-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  color: var(--live);
-  text-transform: uppercase;
-}
-.mock-status-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--live);
-  box-shadow: 0 0 8px var(--live);
-  animation: blink 2s ease-in-out infinite;
-}
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.35; }
+.shot figcaption {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
-.mock-content {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  text-align: left;
+/* ── pra quem é ───────────────────────────────────────────────────────── */
+
+.who {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px 36px;
 }
-.mock-section-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--muted);
+.who li {
+  color: var(--text-secondary);
+  border-left: 1px solid var(--border);
+  padding-left: 16px;
+}
+.who strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ── passos ───────────────────────────────────────────────────────────── */
+
+/* A sequence reads better lying down than stacked — and it is the section
+ * that most needed a different shape from its neighbours. */
+.steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 32px 40px;
+  counter-reset: step;
+}
+.steps li {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+.step-n {
+  display: block;
+  color: var(--text-label);
+  margin-bottom: 10px;
+}
+.steps h3 {
+  margin-bottom: 8px;
+}
+.steps p {
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: 16px;
+}
+
+/* ── artefatos ────────────────────────────────────────────────────────── */
+
+.artifacts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px 48px;
+  max-width: 900px;
+}
+.artifacts dt {
+  font-size: 17px;
+  font-weight: 600;
   margin-bottom: 6px;
 }
-.mock-transcript {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  padding: 12px 14px;
+.artifacts dd {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+/* ── privacidade ──────────────────────────────────────────────────────── */
+
+.privacy {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px 40px;
+  max-width: 900px;
+}
+.privacy li {
+  color: var(--text-secondary);
+  padding-left: 16px;
+  border-left: 1px solid var(--border);
+}
+.privacy strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.flag {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  line-height: 1.7;
-  color: var(--light);
-}
-.mock-translate-badge {
-  display: inline-block;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8.5px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   color: var(--accent);
-  background: var(--accent-tint);
-  border: 1px solid rgba(26, 108, 240, 0.3);
-  padding: 2px 6px;
+  background: var(--accent-soft);
+  padding: 1px 5px;
   border-radius: 2px;
-  vertical-align: middle;
-  margin-right: 6px;
-  transform: translateY(-1px);
-}
-.mock-response {
-  background: var(--accent-tint);
-  border: 1px solid rgba(26, 108, 240, 0.18);
-  border-radius: 2px;
-  padding: 12px 14px;
-  font-family: 'Epilogue', sans-serif;
-  font-size: 12.5px;
-  line-height: 1.65;
-  color: var(--light);
-  font-weight: 400;
-}
-.mock-response strong {
-  color: var(--accent-bright);
-  font-weight: 500;
+  white-space: nowrap;
 }
 
-/* ── Section header (numbered, swiss-grid style) ─────────────────────── */
-.section-header {
+/* ── preço ────────────────────────────────────────────────────────────── */
+
+.price-card {
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  border-radius: 8px;
+  padding: 32px;
+  max-width: var(--measure);
+}
+.price {
   display: flex;
   align-items: baseline;
-  gap: 16px;
-  margin-bottom: 40px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--rule);
+  gap: 6px;
+  margin: 0 0 12px;
 }
-.section-num {
+.price-currency {
+  font-size: 20px;
+  color: var(--text-secondary);
+}
+.price-value {
+  font-size: 44px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.price-unit {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.18em;
-  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-label);
+  margin-left: 4px;
+}
+.price-card .cta-primary {
+  margin-top: 8px;
 }
 
-/* ── Features ────────────────────────────────────────────────────────── */
-.features {
-  padding: 60px 0;
+/* ── faq ──────────────────────────────────────────────────────────────── */
+
+.faq {
+  max-width: var(--measure);
+  border-top: 1px solid var(--border-subtle);
 }
-h2 {
-  font-family: 'Epilogue', sans-serif;
-  font-weight: 600;
-  font-size: clamp(28px, 4vw, 38px);
-  line-height: 1.15;
-  letter-spacing: -0.015em;
-  color: var(--text);
+.faq details {
+  border-bottom: 1px solid var(--border-subtle);
 }
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1px;
-  background: var(--rule);
-  text-align: left;
-}
-.feature-card {
-  background: var(--surface);
-  padding: 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  transition: background 0.2s;
-}
-.feature-card:hover {
-  background: var(--elevated);
-}
-.feature-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 2px;
-  background: var(--accent-tint);
-  border: 1px solid rgba(26, 108, 240, 0.3);
-  display: grid;
-  place-items: center;
-  margin-bottom: 8px;
-  color: var(--accent);
-}
-.feature-icon-live {
-  background: rgba(13, 184, 160, 0.08);
-  border-color: rgba(13, 184, 160, 0.3);
-  color: var(--live);
-}
-.feature-card h3 {
-  font-family: 'Epilogue', sans-serif;
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.005em;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
-}
-.feature-card .badge {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+.faq summary {
+  cursor: pointer;
+  padding: 16px 0;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  background: rgba(13, 184, 160, 0.10);
-  color: var(--live);
-  padding: 3px 8px;
-  border-radius: 2px;
-  border: 1px solid rgba(13, 184, 160, 0.35);
-}
-.feature-card p {
-  color: var(--subtle);
-  font-size: 13.5px;
-  line-height: 1.65;
-  margin-bottom: 8px;
-}
-.feature-card ul {
   list-style: none;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.feature-card ul li {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11.5px;
-  color: var(--muted);
-  padding-left: 14px;
-  position: relative;
-  line-height: 1.5;
-}
-.feature-card ul li::before {
-  content: '·';
-  position: absolute;
-  left: 0;
-  color: var(--accent);
-  font-weight: bold;
-}
-
-/* ── Trust / How it works ────────────────────────────────────────────── */
-.trust {
-  padding: 60px 0;
-}
-.trust-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1px;
-  background: var(--rule);
-  text-align: left;
-}
-.trust-item {
-  background: var(--surface);
-  padding: 24px 22px;
-}
-.trust-item strong {
-  display: block;
-  font-family: 'Epilogue', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.003em;
-  margin-bottom: 6px;
-  color: var(--text);
-}
-.trust-item p {
-  font-size: 12.5px;
-  color: var(--subtle);
-  line-height: 1.6;
-}
-
-/* ── Final CTA ───────────────────────────────────────────────────────── */
-.final-cta {
-  padding: 100px 0 80px;
-  text-align: center;
-}
-.final-cta h2 {
-  margin-bottom: 12px;
-}
-.final-cta p {
-  color: var(--subtle);
-  font-size: 14px;
-  margin-bottom: 32px;
-}
-
-/* ── Footer ──────────────────────────────────────────────────────────── */
-footer {
-  position: relative;
-  z-index: 1;
-  display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 32px;
-  max-width: 1200px;
+  gap: 16px;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary::after {
+  content: '+';
+  color: var(--text-label);
+  font-family: 'JetBrains Mono', monospace;
+}
+.faq details[open] summary::after {
+  content: '−';
+}
+.faq p {
+  color: var(--text-secondary);
+  font-size: 16px;
+  padding-bottom: 16px;
+  margin: 0;
+}
+
+/* ── final + rodapé ───────────────────────────────────────────────────── */
+
+.final {
+  text-align: left;
+  padding-bottom: 88px;
+}
+
+footer {
+  max-width: 1120px;
   margin: 0 auto;
-  border-top: 1px solid var(--rule);
+  padding: 32px var(--gutter) 48px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 28px;
 }
 .footer-brand {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  font-family: 'Epilogue', sans-serif;
-  font-size: 14px;
   font-weight: 600;
-  letter-spacing: -0.005em;
-  color: var(--text);
-}
-.footer-brand > span:nth-child(3) {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: var(--muted);
-}
-.footer-sep {
-  opacity: 0.5;
-  color: var(--faint);
 }
 .footer-links {
   display: flex;
+  flex-wrap: wrap;
   gap: 20px;
 }
 .footer-links a {
-  color: var(--muted);
-  text-decoration: none;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  transition: color 0.2s;
+  color: var(--text-label);
 }
 .footer-links a:hover {
-  color: var(--text);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.footer-note {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: var(--measure);
 }
 
-/* ── Responsive ──────────────────────────────────────────────────────── */
-@media (max-width: 640px) {
+/* ── reveal ───────────────────────────────────────────────────────────── */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── responsivo ───────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .band-hero {
+    padding-top: 56px;
+  }
+  .shot {
+    margin-top: 40px;
+  }
+  h1 {
+    max-width: none;
+  }
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+  .split .shot {
+    margin-top: 8px;
+  }
+  .artifacts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+}
+
+@media (max-width: 560px) {
+  :root {
+    --gutter: 18px;
+  }
+  body {
+    font-size: 16px;
+  }
+  .band {
+    padding: 48px 0;
+  }
   .nav {
-    padding: 16px 20px;
+    gap: 12px;
   }
-  .nav-links a:not(.cta-link) {
-    display: none;
-  }
-  main {
-    padding: 0 20px;
-  }
-  .hero {
-    padding: 32px 0 60px;
-  }
-  .cta-meta {
-    display: block;
-    border-left: none;
-    padding-left: 0;
-    margin-left: 0;
-    margin-top: 4px;
-  }
-  footer {
-    padding: 24px 20px;
-    flex-direction: column;
+  .nav-links {
     gap: 16px;
-    align-items: flex-start;
+  }
+  .cta-primary,
+  .cta-secondary {
+    flex: 1 1 auto;
+  }
+  .price-card {
+    padding: 24px;
+  }
+  .steps li {
+    grid-template-columns: 26px minmax(0, 1fr);
+    gap: 12px;
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Changelog page
+   ══════════════════════════════════════════════════════════════════════
+
+   changelog.html shares this stylesheet and was written against the old
+   token names. Rather than rewrite that page — it is not in scope for this
+   pass — the old names are aliased onto the new tokens, so it inherits the
+   corrected palette without touching its markup.
+
+   Aliases, not duplicates: change a token above and both pages follow. */
+:root {
+  --text: var(--text-primary);
+  --light: var(--text-primary);
+  --subtle: var(--text-secondary);
+  --muted: var(--text-muted);
+  --rule: var(--border);
+  --surface: var(--bg-panel);
+  --elevated: var(--bg-elevated);
+  --live: #0db8a0;
+}
 /* ── Changelog page ─────────────────────────────────────────────────── */
 
 /* Brand wordmark used as a link back to home in secondary pages. */
@@ -616,8 +689,14 @@ footer {
   padding-bottom: 2px;
 }
 
+/* Containment. `main` went full-width when the landing sections were made
+ * to bleed edge to edge, and this page has no `.wrap` inside it — so its
+ * content ran flush against the viewport while the nav stayed centred.
+ * Restore the measure here instead of restructuring the page's markup. */
 .changelog-main {
-  padding-bottom: 80px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 var(--gutter) 88px;
 }
 
 .changelog-header {
@@ -633,11 +712,21 @@ footer {
   margin: 16px 0 18px;
   color: var(--text);
 }
-.changelog-header .lead {
+/* The note explaining that older entries use the old vocabulary. Set apart
+ * from the intro line above it so it reads as context, not as more blurb. */
+.changelog-shift {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
   font-size: 15px;
-  line-height: 1.65;
-  color: var(--subtle);
-  max-width: 540px;
+  color: var(--text-muted);
+}
+
+.changelog-header .lead {
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  max-width: var(--measure);
   margin: 0 auto;
 }
 
@@ -711,9 +800,9 @@ footer {
   color: var(--text);
 }
 .release-summary {
-  font-size: 14px;
-  line-height: 1.65;
-  color: var(--subtle);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text-secondary);
   margin-bottom: 24px;
   max-width: 640px;
 }
@@ -732,7 +821,7 @@ footer {
 .changes-label {
   font-family: 'JetBrains Mono', monospace;
   font-weight: 500;
-  font-size: 9.5px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.22em;
   display: inline-block;
@@ -765,9 +854,9 @@ footer {
   gap: 8px;
 }
 .release-changes li {
-  font-size: 13.5px;
-  line-height: 1.55;
-  color: var(--light);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-primary);
   position: relative;
   padding-left: 14px;
 }

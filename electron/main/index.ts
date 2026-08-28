@@ -5,6 +5,7 @@ import { createOverlayWindow } from './window';
 import { createPopupWindow, setPopupShape } from './popupWindow';
 import { registerIpcHandlers } from './ipc';
 import { SidecarSupervisor } from './sidecar';
+import { observeFinal, resetEchoProbe } from './echoProbe';
 import { ClaudeStreamer } from './claude';
 import { createTray } from './tray';
 import { setupAutoUpdater } from './updater';
@@ -278,6 +279,11 @@ async function startSession() {
         send('auris:transcript', e);
 
         if (e.final) {
+          // Observation only — logs what an echo filter would have discarded
+          // without discarding anything. Feeds the threshold tuning for the
+          // real filter. See echoProbe.ts.
+          observeFinal(e.channel, e.text, e.lang, e.ts);
+
           // A new final arrived — drop any partial we were about to translate;
           // the final supersedes it and gets the full translation pass below.
           cancelPendingPartialTranslation();
@@ -339,7 +345,12 @@ async function startSession() {
     console.log('[main] starting sidecar in local-whisper mode');
   }
   sidecar.start({
-    source: 'loopback',
+    // Dual captures mic and loopback as two independent streams so each
+    // transcript line carries who said it. That attribution is what makes a
+    // post-call record possible: with loopback alone Auris never hears the
+    // seller, only the client. Cost of it is two Whisper calls per moment of
+    // speech instead of one.
+    source: 'dual',
     proxyUrl: useRemoteWhisper ? auth.url : null,
     authToken: useRemoteWhisper ? auth.token : null,
   });
@@ -369,6 +380,7 @@ async function stopSession() {
   }
   sidecar?.stop();
   claude?.reset();
+  resetEchoProbe();
   refreshPopupVisibility();
 }
 

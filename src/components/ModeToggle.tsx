@@ -30,8 +30,8 @@ export function ModeToggle({ mode, onChange, variant = 'topbar' }: Props) {
         aria-label={isAuto ? 'Desativar modo auto' : 'Ativar modo auto'}
         className={
           isAuto
-            ? 'flex items-center gap-1.5 rounded-sharp border border-live/40 bg-live/[0.08] px-2 py-1 font-mono text-[9.5px] uppercase tracking-widest text-live transition-colors hover:bg-live/[0.14]'
-            : 'flex items-center gap-1.5 rounded-sharp border border-border bg-transparent px-2 py-1 font-mono text-[9.5px] uppercase tracking-widest text-subtle transition-colors hover:border-subtle hover:text-text'
+            ? 'chrome flex items-center gap-1.5 rounded-sharp border border-live/40 bg-live/[0.08] px-2 py-1.5 text-live transition-colors hover:bg-live/[0.14]'
+            : 'chrome flex items-center gap-1.5 rounded-sharp border border-border bg-transparent px-2 py-1.5 text-secondary transition-colors hover:border-subtle hover:text-primary'
         }
       >
         <SignalIcon active={isAuto} />
