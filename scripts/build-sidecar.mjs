@@ -13,6 +13,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -20,6 +21,20 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
 const sidecarDir = path.join(root, 'python-sidecar');
 const isWindows = process.platform === 'win32';
+
+/**
+ * PyInstaller's scratch directory, deliberately outside the repo.
+ *
+ * `--clean` starts by rmtree-ing this directory. When the checkout lives in a
+ * synced folder (OneDrive, Dropbox), the sync client holds handles on
+ * directories it is indexing, and the removal fails with EPERM on a directory
+ * that is already empty — intermittently, so a build that worked yesterday
+ * fails today. Keeping the scratch out of the synced tree removes the race.
+ *
+ * Only the work path moves: `dist/` stays next to the sidecar because
+ * electron-builder's extraResources reads it from there.
+ */
+const workPath = path.join(os.tmpdir(), 'auris-pyinstaller-build');
 const venvPython = isWindows
   ? path.join(sidecarDir, '.venv', 'Scripts', 'python.exe')
   : path.join(sidecarDir, '.venv', 'bin', 'python');
@@ -51,7 +66,7 @@ delete env.ELECTRON_RUN_AS_NODE;
 
 const result = spawnSync(
   venvPython,
-  ['-m', 'PyInstaller', '--clean', '--noconfirm', 'build.spec'],
+  ['-m', 'PyInstaller', '--clean', '--noconfirm', '--workpath', workPath, 'build.spec'],
   { cwd: sidecarDir, stdio: 'inherit', env },
 );
 
