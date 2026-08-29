@@ -11,6 +11,13 @@
  *
  * Type rule, same as the app: mono uppercase is chrome (eyebrows, labels,
  * buttons); everything a person reads is sans in normal case.
+ *
+ * Colour rule: the two accents are not a palette, they are the two audio
+ * channels. Blue is the vendedor's microphone, teal is the computer's audio
+ * output — which is to say, the client. They appear together only where the
+ * page is actually talking about that split (the hero console and step 02);
+ * everywhere else the page runs on one accent, so the pairing keeps meaning
+ * something when it does show up.
  */
 
 :root {
@@ -27,6 +34,10 @@
 
   --accent: #4c8dff;
   --accent-soft: rgba(76, 141, 255, 0.12);
+
+  /* The two channels. */
+  --ch-vendedor: #4c8dff;
+  --ch-cliente: #0db8a0;
 
   --measure: 62ch;
   --gutter: 24px;
@@ -53,17 +64,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Faint grid — the brand's 64px module, kept very quiet. */
-.bg-grid {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image:
-    linear-gradient(var(--border-subtle) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
-  background-size: 64px 64px;
-  opacity: 0.55;
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* ── chrome voice ─────────────────────────────────────────────────────── */
@@ -247,13 +257,6 @@ p {
 
 /* ── hero ─────────────────────────────────────────────────────────────── */
 
-/* Copy first, screenshot below at its natural size.
- *
- * Side by side, the shot had to fit a ~465px column and was displayed at
- * 0.73 of its pixel size — a non-integer downscale that softens every glyph
- * and turns the record into grey mush. Stacking gives it the full measure,
- * so it renders close to 1:1 and stays legible. The artifact is the
- * argument here; it earns the width. */
 .hero-copy {
   max-width: 780px;
 }
@@ -270,6 +273,9 @@ p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* The changelog's button carries a download glyph before its label; without
+   * this the two touch. No effect on the landing's icon-less buttons. */
+  gap: 8px;
   padding: 12px 20px;
   border-radius: 4px;
   border: 1px solid transparent;
@@ -313,14 +319,311 @@ p {
   margin-top: 6px;
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   Console — the signature
+   ══════════════════════════════════════════════════════════════════════
+
+   Two lanes scrolling right to left under a fixed playhead, one per audio
+   channel, with the record assembling underneath as the objections and the
+   commitments go past. It is the only animated thing on the page, on purpose:
+   one orchestrated moment reads as intent, scattered fades read as filler.
+
+   The window is 90 seconds of a 12-minute call, so a block is wide enough to
+   carry a legible waveform. `--pos` is the playhead position in the track and
+   is the single number the JS and the CSS have to agree on. */
+
+.console {
+  --window: 90s;
+  --pos: 76%;
+  margin-top: 52px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-panel);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.console-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.console-mark svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+.console-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ch-cliente);
+}
+.state-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.console[data-state='listening'] .state-dot {
+  animation: pulse 1.6s ease-in-out infinite;
+}
+.console[data-state='done'] .console-state {
+  color: var(--ch-vendedor);
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.console-clock {
+  margin-left: auto;
+  color: var(--text-label);
+  font-variant-numeric: tabular-nums;
+}
+.console-replay {
+  font: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-label);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.console-replay:hover {
+  color: var(--text-primary);
+  border-color: var(--text-label);
+}
+
+/* ── lanes ── */
+
+.lanes {
+  position: relative;
+  padding: 20px 0;
+  display: grid;
+  gap: 10px;
+}
+
+.lane {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+
+.lane-label {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding-left: 16px;
+  border-left: 2px solid currentColor;
+  line-height: 1.35;
+}
+.lane-label em {
+  display: block;
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--text-label);
+}
+.lane-cliente {
+  color: var(--ch-cliente);
+}
+.lane-vendedor {
+  color: var(--ch-vendedor);
+}
+
+.lane-track {
+  position: relative;
+  height: 40px;
+  overflow: hidden;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* 12 minutes over a 90-second window: the strip is 8x the track. */
+.lane-inner {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 800%;
+  height: 100%;
+  will-change: transform;
+}
+
+.blk {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 3px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ch) 10%, transparent);
+  opacity: 0.35;
+  transition: opacity 0.25s ease, background-color 0.25s ease;
+}
+.blk i {
+  flex: 1 1 2px;
+  min-width: 0;
+  height: var(--h);
+  background: var(--ch);
+  border-radius: 1px;
+}
+.blk.is-past {
+  opacity: 0.7;
+}
+.blk.is-live {
+  opacity: 1;
+  background: color-mix(in srgb, var(--ch) 18%, transparent);
+}
+.lane-inner[data-lane='cliente'] .blk {
+  --ch: var(--ch-cliente);
+}
+.lane-inner[data-lane='vendedor'] .blk {
+  --ch: var(--ch-vendedor);
+}
+
+.playhead {
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: calc(168px + 14px + (100% - 168px - 14px) * 0.76);
+  width: 1px;
+  background: var(--text-label);
+  opacity: 0.5;
+}
+
+/* ── current line ── */
+
+.console-line {
+  margin: 0;
+  padding: 0 20px 18px;
+  max-width: none;
+  min-height: 3.4em;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+.console-line b {
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  margin-right: 8px;
+}
+.console-line[data-speaker='cliente'] b {
+  color: var(--ch-cliente);
+}
+.console-line[data-speaker='vendedor'] b {
+  color: var(--ch-vendedor);
+}
+
+/* ── the record ── */
+
+.console-out {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 40px;
+  padding: 22px 20px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-app);
+}
+.out-label {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-label);
+  margin: 0 0 12px;
+}
+.out-label-cliente {
+  color: var(--ch-cliente);
+}
+.out-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  min-height: 108px;
+  align-content: start;
+}
+.out-list li {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
+  animation: land 0.35s ease both;
+}
+.out-list li span {
+  display: block;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-label);
+  margin-top: 3px;
+}
+@keyframes land {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+/* Nothing yet is a state worth showing, not an empty box. */
+.out-list:empty::after {
+  content: 'nada ainda';
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--border);
+}
+
+.console-foot {
+  margin: 0;
+  max-width: none;
+  padding: 14px 20px 16px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+/* No JS, no motion: the lanes are meaningless without the driver, so they
+ * come out and the record — which is the actual claim — stays. */
+.console.no-js .lanes,
+.console.no-js .console-line,
+.console.no-js .console-replay {
+  display: none;
+}
+
 /* ── screenshot ───────────────────────────────────────────────────────── */
 
 .shot {
-  margin: 56px 0 0;
+  margin: 48px 0 0;
   max-width: 900px;
 }
-/* The overlay is small on purpose — showing it stretched to the column
- * width would misrepresent how much screen it actually takes. */
 /* Shown at its real pixel size: scaling it up would misrepresent how much
  * screen the collapsed window actually takes. */
 .shot-pill {
@@ -334,30 +637,20 @@ p {
  * pixels. */
 .shot-meet {
   max-width: 1120px;
-  margin: 32px 0 0;
+  margin: 40px 0 0;
 }
 .shot-overlay {
   max-width: 520px;
+  margin: 32px 0;
+}
+.shot-record {
+  max-width: 900px;
 }
 .shot-inline {
   margin-top: 36px;
-  max-width: 600px;
-}
-.shot-inline .shot-frame {
-  box-shadow: none;
+  max-width: 640px;
 }
 
-/* Text beside the product, not above it — the one section where the picture
- * is the evidence for the sentence next to it. */
-.split {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
-  gap: 48px;
-  align-items: start;
-}
-.split .shot {
-  margin: 0;
-}
 .shot-frame {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -400,7 +693,8 @@ p {
 /* ── passos ───────────────────────────────────────────────────────────── */
 
 /* A sequence reads better lying down than stacked — and it is the section
- * that most needed a different shape from its neighbours. */
+ * that most needed a different shape from its neighbours. The 01/02/03 is
+ * kept because this genuinely is ordered: step 2 cannot happen before 1. */
 .steps {
   list-style: none;
   padding: 0;
@@ -408,7 +702,7 @@ p {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 32px 40px;
-  counter-reset: step;
+  align-items: start;
 }
 .steps li {
   border-top: 1px solid var(--border);
@@ -426,6 +720,45 @@ p {
   color: var(--text-secondary);
   margin: 0;
   font-size: 16px;
+}
+.step-note {
+  margin-top: 12px !important;
+  color: var(--text-muted) !important;
+  font-size: 15px !important;
+}
+
+/* The one place outside the console where both channels appear, because it
+ * is the one paragraph that is about the split itself. */
+.channels {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+  display: grid;
+  gap: 8px;
+}
+.channels li {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 10px;
+  padding-left: 12px;
+  border-left: 2px solid currentColor;
+}
+.channels .ch-cliente {
+  color: var(--ch-cliente);
+}
+.channels .ch-vendedor {
+  color: var(--ch-vendedor);
+}
+.ch-src {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.ch-dst {
+  color: var(--text-secondary);
+  font-size: 15px;
 }
 
 /* ── artefatos ────────────────────────────────────────────────────────── */
@@ -469,17 +802,6 @@ p {
   font-weight: 600;
 }
 
-.flag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  color: var(--accent);
-  background: var(--accent-soft);
-  padding: 1px 5px;
-  border-radius: 2px;
-  white-space: nowrap;
-}
-
 /* ── preço ────────────────────────────────────────────────────────────── */
 
 .price-card {
@@ -495,15 +817,17 @@ p {
   gap: 6px;
   margin: 0 0 12px;
 }
-.price-currency {
-  font-size: 20px;
-  color: var(--text-secondary);
-}
 .price-free {
   font-size: 36px;
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1;
+}
+/* Restore path for when the beta ends: `applyPrice()` fills `[data-price]`
+ * and these two style the number next to it. */
+.price-currency {
+  font-size: 20px;
+  color: var(--text-secondary);
 }
 .price-value {
   font-size: 44px;
@@ -599,40 +923,48 @@ footer {
   max-width: var(--measure);
 }
 
-/* ── reveal ───────────────────────────────────────────────────────────── */
-
-.reveal {
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-.reveal.is-visible {
-  opacity: 1;
-  transform: none;
-}
-
 /* ── responsivo ───────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
   .band-hero {
     padding-top: 56px;
   }
-  .shot {
-    margin-top: 40px;
-  }
   h1 {
     max-width: none;
-  }
-  .split {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 32px;
-  }
-  .split .shot {
-    margin-top: 8px;
   }
   .artifacts {
     grid-template-columns: minmax(0, 1fr);
     gap: 28px;
+  }
+}
+
+@media (max-width: 720px) {
+  /* The label column costs more than it gives once the track is this narrow:
+   * the label goes above its own lane and the playhead spans the full width. */
+  .lane {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  .lane-label {
+    padding-left: 10px;
+  }
+  .lane-label em {
+    display: inline;
+    margin-left: 6px;
+  }
+  .lanes {
+    gap: 16px;
+  }
+  .playhead {
+    left: 76%;
+    top: 20px;
+    bottom: 20px;
+  }
+  .console-out {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .out-list {
+    min-height: 0;
   }
 }
 
@@ -659,9 +991,18 @@ footer {
   .price-card {
     padding: 24px;
   }
-  .steps li {
-    grid-template-columns: 26px minmax(0, 1fr);
-    gap: 12px;
+  .console {
+    margin-top: 36px;
+  }
+  .console-bar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .console-line,
+  .console-out,
+  .console-foot {
+    padding-left: 16px;
+    padding-right: 16px;
   }
 }
 
@@ -669,14 +1010,17 @@ footer {
   html {
     scroll-behavior: auto;
   }
-  .reveal {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
   * {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+  /* The lanes only mean something in motion. Static, they are a chart of a
+   * call nobody asked for — so the console drops to its finished state and
+   * the record, which is the point, is shown outright. */
+  .console[data-state='static'] .lanes,
+  .console[data-state='static'] .console-line,
+  .console[data-state='static'] .console-replay {
+    display: none;
   }
 }
 
@@ -698,9 +1042,8 @@ footer {
   --rule: var(--border);
   --surface: var(--bg-panel);
   --elevated: var(--bg-elevated);
-  --live: #0db8a0;
+  --live: var(--ch-cliente);
 }
-/* ── Changelog page ─────────────────────────────────────────────────── */
 
 /* Brand wordmark used as a link back to home in secondary pages. */
 .brand-link {
@@ -729,19 +1072,25 @@ footer {
   text-align: center;
   padding: 60px 0 40px;
 }
+/* `margin-inline: auto` is load-bearing, not tidiness: the global `h1` caps
+ * at 18ch, so without it the heading box sits 18ch wide against the left edge
+ * and `text-align: center` only centres the text inside that box. */
 .changelog-header h1 {
   font-family: 'Epilogue', sans-serif;
   font-weight: 600;
   font-size: clamp(34px, 5vw, 52px);
   line-height: 1.1;
   letter-spacing: -0.02em;
-  margin: 16px 0 18px;
+  max-width: 20ch;
+  margin: 16px auto 18px;
   color: var(--text);
 }
 /* The note explaining that older entries use the old vocabulary. Set apart
  * from the intro line above it so it reads as context, not as more blurb. */
-.changelog-shift {
-  margin-top: 20px;
+/* Two classes, so it outranks `.changelog-header .lead` below — which sets
+ * the `margin` shorthand and would otherwise zero this top margin out. */
+.changelog-header .changelog-shift {
+  margin-top: 24px;
   padding-top: 20px;
   border-top: 1px solid var(--border);
   font-size: 15px;
@@ -780,8 +1129,8 @@ footer {
   border-top: none;
   margin-bottom: 8px;
   padding: 28px 28px 32px;
-  background: rgba(26, 108, 240, 0.04);
-  border: 1px solid rgba(26, 108, 240, 0.25);
+  background: rgba(76, 141, 255, 0.04);
+  border: 1px solid rgba(76, 141, 255, 0.25);
   border-radius: 4px;
   position: relative;
 }
@@ -857,12 +1206,12 @@ footer {
 }
 .changes-label-new {
   color: var(--accent);
-  background: rgba(26, 108, 240, 0.10);
-  border: 1px solid rgba(26, 108, 240, 0.35);
+  background: rgba(76, 141, 255, 0.1);
+  border: 1px solid rgba(76, 141, 255, 0.35);
 }
 .changes-label-improved {
   color: var(--live);
-  background: rgba(13, 184, 160, 0.10);
+  background: rgba(13, 184, 160, 0.1);
   border: 1px solid rgba(13, 184, 160, 0.35);
 }
 .changes-label-fixed {
@@ -960,4 +1309,3 @@ footer {
     padding: 32px 20px;
   }
 }
-

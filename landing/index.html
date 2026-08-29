@@ -15,6 +15,16 @@
       content="Cada call do seu time vira resumo, próximos passos e follow-up pronto. Sem bot na reunião."
     />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://auris-landing.pages.dev/" />
+    <meta
+      property="og:image"
+      content="https://auris-landing.pages.dev/screenshot-call.png"
+    />
+    <meta
+      property="og:image:alt"
+      content="O registro de uma call no Auris: resumo, próximos passos e objeções."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
 
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
@@ -31,7 +41,6 @@
   </head>
   <body>
     <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
-    <div class="bg-grid" aria-hidden="true"></div>
 
     <header class="nav">
       <div class="brand">
@@ -39,8 +48,8 @@
           <rect x="10" y="24" width="4" height="20" rx="1" fill="#4C8DFF" opacity="0.4" />
           <rect x="17" y="16" width="4" height="28" rx="1" fill="#4C8DFF" opacity="0.65" />
           <rect x="24" y="10" width="4" height="36" rx="1" fill="#4C8DFF" />
-          <rect x="31" y="16" width="4" height="28" rx="1" fill="#0db8a0" opacity="0.8" />
-          <rect x="38" y="22" width="4" height="22" rx="1" fill="#0db8a0" opacity="0.5" />
+          <rect x="31" y="16" width="4" height="28" rx="1" fill="#0DB8A0" opacity="0.8" />
+          <rect x="38" y="22" width="4" height="22" rx="1" fill="#0DB8A0" opacity="0.5" />
         </svg>
         <span class="brand-text">Auris<span class="brand-dot">.</span></span>
       </div>
@@ -56,7 +65,7 @@
       <!-- ── Hero ─────────────────────────────────────────────────────── -->
       <section class="band band-hero">
         <div class="wrap">
-          <div class="hero-copy reveal">
+          <div class="hero-copy">
             <h1>Cada call do seu time vira resumo, próximos passos e follow-up pronto.</h1>
             <p class="lede">
               Você não esteve na reunião e, uma semana depois, ninguém sabe
@@ -74,23 +83,101 @@
             <p class="cta-note" data-download-note></p>
           </div>
 
-          <figure class="shot reveal">
-            <div class="shot-frame">
-              <img
-                src="./screenshot-call.png"
-                alt="Tela do Auris mostrando o registro de uma call: resumo, próximos passos e objeções."
-                width="900"
-                height="1035"
-                loading="lazy"
-              />
+          <!-- ── Signature: os dois canais ──────────────────────────────
+               O que o Auris faz que ninguém mais faz é ouvir dois canais
+               de áudio separados — a saída do computador e o microfone do
+               vendedor — e é essa separação que permite atribuir a objeção
+               ao cliente e a resposta ao vendedor. Este console mostra isso
+               acontecendo, com a transcrição real de uma call do app. -->
+          <div class="console no-js" data-console aria-labelledby="console-heading">
+            <h2 class="visually-hidden" id="console-heading">
+              Uma call em dois canais, virando registro
+            </h2>
+
+            <div class="console-bar">
+              <span class="console-mark" aria-hidden="true">
+                <svg viewBox="0 0 56 56" fill="none">
+                  <rect x="10" y="24" width="4" height="20" rx="1" fill="#4C8DFF" opacity="0.4" />
+                  <rect x="17" y="16" width="4" height="28" rx="1" fill="#4C8DFF" opacity="0.65" />
+                  <rect x="24" y="10" width="4" height="36" rx="1" fill="#4C8DFF" />
+                  <rect x="31" y="16" width="4" height="28" rx="1" fill="#0DB8A0" opacity="0.8" />
+                  <rect x="38" y="22" width="4" height="22" rx="1" fill="#0DB8A0" opacity="0.5" />
+                </svg>
+              </span>
+              <span class="console-state" data-console-state>
+                <i class="state-dot" aria-hidden="true"></i>
+                <span data-console-state-text>ouvindo</span>
+              </span>
+              <span class="console-clock" data-console-clock>00:00</span>
+              <button class="console-replay" type="button" data-console-replay>
+                Rever
+              </button>
             </div>
-            <figcaption>O registro de uma call, como ele aparece no app.</figcaption>
-          </figure>
+
+            <div class="lanes" data-lanes>
+              <div class="lane">
+                <span class="lane-label lane-cliente">
+                  cliente <em>saída do computador</em>
+                </span>
+                <div class="lane-track">
+                  <div class="lane-inner" data-lane="cliente"></div>
+                </div>
+              </div>
+              <div class="lane">
+                <span class="lane-label lane-vendedor">
+                  vendedor <em>microfone</em>
+                </span>
+                <div class="lane-track">
+                  <div class="lane-inner" data-lane="vendedor"></div>
+                </div>
+              </div>
+              <span class="playhead" aria-hidden="true"></span>
+            </div>
+
+            <p class="console-line" data-console-line aria-live="off"></p>
+
+            <!-- The record is written out here, not only built by the script:
+                 with JS blocked the lanes go away and this stays, which is the
+                 part that actually makes the claim. main.js empties it and
+                 rebuilds it in call order. -->
+            <div class="console-out">
+              <section>
+                <h3 class="out-label out-label-cliente">Objeções</h3>
+                <ul class="out-list" data-out="objecoes">
+                  <li>Prazo <span>seis semanas caem na alta temporada</span></li>
+                  <li>Preço <span>implantação e mensalidade acima do esperado</span></li>
+                  <li>Autoridade <span>a decisão depende do sócio financeiro</span></li>
+                </ul>
+              </section>
+              <section>
+                <h3 class="out-label">Próximos passos</h3>
+                <ul class="out-list" data-out="passos">
+                  <li>
+                    Enviar proposta de uma página com escopo, prazo e valores
+                    <span>nosso · quinta-feira</span>
+                  </li>
+                  <li>
+                    Alinhar proposta com o sócio financeiro <span>cliente</span>
+                  </li>
+                  <li>
+                    Ligar para definir data do levantamento
+                    <span>nosso · segunda antes das 10h</span>
+                  </li>
+                </ul>
+              </section>
+            </div>
+
+            <p class="console-foot">
+              Transcrição de uma call de demonstração, com as falas na ordem em
+              que saíram. O registro à direita é o que o Auris monta a partir
+              dela.
+            </p>
+          </div>
         </div>
       </section>
 
       <!-- ── Pra quem é ───────────────────────────────────────────────── -->
-      <section class="band band-fill reveal">
+      <section class="band band-fill">
         <div class="wrap">
           <span class="eyebrow">Pra quem é</span>
           <h2>Times que vendem por reunião.</h2>
@@ -112,7 +199,7 @@
       </section>
 
       <!-- ── Como funciona ────────────────────────────────────────────── -->
-      <section class="band reveal" id="como-funciona">
+      <section class="band" id="como-funciona">
         <div class="wrap">
           <span class="eyebrow">Como funciona</span>
           <h2>Três passos, nenhum bot na sala.</h2>
@@ -130,8 +217,21 @@
               <h3>O Auris ouve o áudio do computador.</h3>
               <p>
                 Não entra na chamada e não aparece na lista de participantes.
-                Ele escuta a saída de áudio da máquina e o microfone do
-                vendedor, em separado.
+                Ele escuta duas fontes, em separado:
+              </p>
+              <ul class="channels">
+                <li class="ch-cliente">
+                  <span class="ch-src">saída do computador</span>
+                  <span class="ch-dst">tudo que o cliente fala</span>
+                </li>
+                <li class="ch-vendedor">
+                  <span class="ch-src">microfone</span>
+                  <span class="ch-dst">tudo que o vendedor fala</span>
+                </li>
+              </ul>
+              <p class="step-note">
+                É essa separação que faz a objeção ficar no nome de quem
+                levantou e a resposta no nome de quem deu.
               </p>
             </li>
             <li>
@@ -147,7 +247,7 @@
       </section>
 
       <!-- ── O que fica registrado ────────────────────────────────────── -->
-      <section class="band band-fill reveal">
+      <section class="band band-fill">
         <div class="wrap">
           <span class="eyebrow">O que fica registrado</span>
           <h2>Quatro coisas por call.</h2>
@@ -182,6 +282,21 @@
               </dd>
             </div>
           </dl>
+
+          <figure class="shot shot-record">
+            <div class="shot-frame">
+              <img
+                src="./screenshot-call.png"
+                alt="Tela do Auris mostrando o registro de uma call: resumo, próximos passos e objeções."
+                width="900"
+                height="1035"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <figcaption>O registro de uma call, como ele aparece no app.</figcaption>
+          </figure>
+
           <figure class="shot shot-inline">
             <div class="shot-frame">
               <img
@@ -190,14 +305,16 @@
                 width="600"
                 height="194"
                 loading="lazy"
+                decoding="async"
               />
             </div>
+            <figcaption>O follow-up sai escrito. Quem envia é o vendedor.</figcaption>
           </figure>
         </div>
       </section>
 
       <!-- ── Durante a call ───────────────────────────────────────────── -->
-      <section class="band reveal">
+      <section class="band">
         <div class="wrap">
           <span class="eyebrow">Durante a call</span>
           <h2>Uma janela ao lado, e só.</h2>
@@ -214,6 +331,7 @@
                 width="420"
                 height="150"
                 loading="lazy"
+                decoding="async"
               />
             </div>
             <figcaption>Esperando o áudio chegar.</figcaption>
@@ -222,10 +340,42 @@
           <p class="body">
             Quando alguém fala, ele abre e vai transcrevendo. Dá para perguntar
             sobre o que já foi dito sem interromper ninguém, e o que está em
-            outro idioma chega traduzido. Cada linha fica marcada com quem
-            falou, e é isso que separa a objeção do cliente da resposta do
-            vendedor quando o registro é gerado.
+            outro idioma chega traduzido.
           </p>
+
+          <figure class="shot shot-overlay">
+            <div class="shot-frame">
+              <img
+                src="./screenshot-overlay.png"
+                alt="A janela do Auris aberta durante a call, transcrevendo a fala do cliente."
+                width="520"
+                height="152"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <figcaption>Aberta, transcrevendo o que acabou de ser dito.</figcaption>
+          </figure>
+
+          <p class="body">
+            Cada linha fica marcada com quem falou, e é isso que separa a
+            objeção do cliente da resposta do vendedor quando o registro é
+            gerado.
+          </p>
+
+          <figure class="shot shot-inline">
+            <div class="shot-frame">
+              <img
+                src="./screenshot-transcricao.png"
+                alt="A transcrição completa de uma call no Auris, com cada linha marcada como vendedor ou cliente."
+                width="640"
+                height="900"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <figcaption>A transcrição inteira fica guardada, linha por linha.</figcaption>
+          </figure>
 
           <figure class="shot shot-meet">
             <div class="shot-frame">
@@ -235,6 +385,7 @@
                 width="1360"
                 height="817"
                 loading="lazy"
+                decoding="async"
               />
             </div>
             <figcaption>
@@ -246,7 +397,7 @@
       </section>
 
       <!-- ── Vende pra fora ───────────────────────────────────────────── -->
-      <section class="band band-tight reveal">
+      <section class="band band-tight">
         <div class="wrap">
           <span class="eyebrow">Vende pra fora?</span>
           <h2>Reunião em inglês, registro em português.</h2>
@@ -259,7 +410,7 @@
       </section>
 
       <!-- ── Privacidade ──────────────────────────────────────────────── -->
-      <section class="band band-fill reveal" id="privacidade">
+      <section class="band band-fill" id="privacidade">
         <div class="wrap">
           <span class="eyebrow">Privacidade</span>
           <h2>O que acontece com o áudio.</h2>
@@ -298,7 +449,7 @@
       </section>
 
       <!-- ── Preço ────────────────────────────────────────────────────── -->
-      <section class="band reveal" id="preco">
+      <section class="band" id="preco">
         <div class="wrap">
           <span class="eyebrow">Preço</span>
           <h2>Grátis durante o beta.</h2>
@@ -321,7 +472,7 @@
       </section>
 
       <!-- ── FAQ ──────────────────────────────────────────────────────── -->
-      <section class="band band-fill reveal" id="faq">
+      <section class="band band-fill" id="faq">
         <div class="wrap">
           <span class="eyebrow">Perguntas</span>
           <h2>O que costumam perguntar.</h2>
@@ -390,7 +541,7 @@
       </section>
 
       <!-- ── CTA final ────────────────────────────────────────────────── -->
-      <section class="band final reveal">
+      <section class="band final">
         <div class="wrap">
           <h2>Instale e rode na próxima reunião.</h2>
           <div class="cta-row">
