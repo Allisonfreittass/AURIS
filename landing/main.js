@@ -7,51 +7,58 @@
  * small reveal-on-scroll.
  *
  * On a new release: upload the artifacts to the `auris-releases` R2 bucket
- * and bump LATEST_VERSION.
+ * and bump that platform's entry in VERSIONS.
  */
-
-/** Price per seat, in BRL. Single source of truth for the page. */
-const PRICE_PER_SEAT_BRL = 129;
 
 /**
- * Contact address for the "falar com a gente" CTAs.
- *
- * Left empty on purpose: publishing an address is a decision for a person,
- * not a guess. While it is empty every contact CTA is removed from the page
- * rather than rendered as a broken mailto. Fill it in before deploying.
+ * Price per seat, in BRL. Nothing reads it while the beta is free — the page
+ * says "grátis" in words instead of showing a zero, because a price of R$ 0
+ * reads as a broken number rather than as an offer. Set it back and restore
+ * the `data-price` span when the beta ends.
  */
-const CONTACT_EMAIL = '';
+const PRICE_PER_SEAT_BRL = 0;
+
+/**
+ * Contact address for the "falar com a gente" CTAs. When empty, those CTAs
+ * are removed from the page rather than rendered as a broken mailto.
+ */
+const CONTACT_EMAIL = 'allisonfreittass@gmail.com';
 
 const R2_BASE = 'https://pub-ce581fb3ec254955850622d3e9bd589e.r2.dev';
-const LATEST_VERSION = '0.5.0-beta';
+
+/**
+ * Version per platform, not one shared constant.
+ *
+ * The two builds are produced on different machines — PyInstaller does not
+ * cross-compile — so they drift apart in practice. A single constant papered
+ * over that and produced two artifacts with the same number and different
+ * contents, which is the one thing a version is supposed to prevent.
+ */
+const VERSIONS = {
+  windows: '0.5.0-beta',
+  linux: '0.5.1-beta',
+};
 
 /**
  * Artifacts in the bucket. `available` is not decoration — flip it to false
  * and the button stops offering a download instead of pointing at a 404 or,
- * worse, at a stale build.
- *
- * Windows is held back right now: the .exe on the bucket predates this
- * version and was compiled against a Groq model that has since been retired,
- * so it installs an app whose suggestions and translation fail. Set
- * `available: true` once a 0.5.0-beta .exe is uploaded.
+ * worse, at a stale build. Both platforms are at 0.5.0-beta and both were
+ * checked against the bucket (size and sha512) before being turned on.
  */
 const BUILDS = {
   windows: {
     label: 'Baixar para Windows',
-    file: `Auris-Setup-${LATEST_VERSION}.exe`,
-    available: false,
+    file: `Auris-Setup-${VERSIONS.windows}.exe`,
+    available: true,
     note:
-      'Windows 10 ou 11 · o instalador não é assinado, então o Windows ' +
-      'mostra um aviso azul: clique em "Mais informações" e depois em ' +
-      '"Executar mesmo assim".',
-    pendingNote:
-      'A versão para Windows está sendo atualizada e sai em breve. A ' +
-      'anterior ficou para trás e não roda mais como deveria.',
+      'Windows 10 ou 11 · 106 MB · o instalador não é assinado, então o ' +
+      'Windows mostra um aviso azul: clique em "Mais informações" e depois ' +
+      'em "Executar mesmo assim".',
     other: 'linux',
   },
   linux: {
     label: 'Baixar para Linux',
-    file: `Auris-${LATEST_VERSION}-x86_64.AppImage`,
+    file: `Auris-${VERSIONS.linux}-x86_64.AppImage`,
     available: true,
     note:
       'AppImage x86_64 · 138 MB · precisa de PulseAudio ou PipeWire. Depois ' +

@@ -522,6 +522,11 @@ app.whenReady().then(() => {
       claude?.reset();
       lastAutoFireAt = 0;
       lastAutoText = '';
+      // Every window keeps its own copy of the transcript, so clearing the
+      // buffer in main is invisible to them. Without this broadcast the
+      // popup went on showing a conversation the rest of the app had already
+      // forgotten — the main window looked cleared, the overlay did not.
+      send('auris:context-cleared', null);
       console.log('[main] context cleared');
     },
     getMode: () => currentMode,

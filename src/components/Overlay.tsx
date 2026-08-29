@@ -125,6 +125,15 @@ export function Overlay({ onSignedOut }: Props) {
     // Auto-mode: main detected a question and is firing the LLM. Append
     // a "detected" bubble + a placeholder Auris message that the upcoming
     // streamed deltas will fill in (same channel as manual asks).
+    // Also subscribed here, not just cleared inline by the button: a clear
+    // may be triggered from another surface, and this window would otherwise
+    // keep a transcript the rest of the app has dropped.
+    const offClear = auris.onContextCleared(() => {
+      setTranscriptHistory([]);
+      setPartialLine('');
+      setFinalCount(0);
+    });
+
     const offDQ = auris.onDetectedQuestion((e) => {
       const now = Date.now();
       setMessages((prev) => [
@@ -183,6 +192,7 @@ export function Overlay({ onSignedOut }: Props) {
 
     return () => {
       offT();
+      offClear();
       offDQ();
       offS();
       offStat();

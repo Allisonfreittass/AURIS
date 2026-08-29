@@ -198,31 +198,49 @@
 
       <!-- ── Durante a call ───────────────────────────────────────────── -->
       <section class="band reveal">
-        <div class="wrap split">
-          <div>
-            <span class="eyebrow">Durante a call</span>
-            <h2>E enquanto a reunião acontece.</h2>
-            <p class="body">
-              A transcrição aparece ao vivo na janela ao lado. O vendedor pode
-              perguntar sobre o que já foi dito sem interromper ninguém, e o que
-              está em outro idioma chega traduzido.
-            </p>
-            <p class="body">
-              Cada linha fica marcada com quem falou. É isso que separa a
-              objeção do cliente da resposta do vendedor quando o registro é
-              gerado no fim.
-            </p>
-          </div>
-          <figure class="shot">
+        <div class="wrap">
+          <span class="eyebrow">Durante a call</span>
+          <h2>Uma janela ao lado, e só.</h2>
+          <p class="body">
+            O Auris fica numa janela pequena por cima da reunião, sem roubar o
+            foco e sem entrar na chamada. Enquanto ninguém fala, ele é só isto:
+          </p>
+
+          <figure class="shot shot-pill">
             <div class="shot-frame">
               <img
-                src="./screenshot-transcricao.png"
-                alt="Transcrição ao vivo no Auris, com cada linha marcada como vendedor ou cliente."
-                width="640"
-                height="900"
+                src="./screenshot-pill.png"
+                alt="A janela do Auris recolhida, do tamanho de um botão, sobre a reunião."
+                width="420"
+                height="150"
                 loading="lazy"
               />
             </div>
+            <figcaption>Esperando o áudio chegar.</figcaption>
+          </figure>
+
+          <p class="body">
+            Quando alguém fala, ele abre e vai transcrevendo. Dá para perguntar
+            sobre o que já foi dito sem interromper ninguém, e o que está em
+            outro idioma chega traduzido. Cada linha fica marcada com quem
+            falou, e é isso que separa a objeção do cliente da resposta do
+            vendedor quando o registro é gerado.
+          </p>
+
+          <figure class="shot shot-meet">
+            <div class="shot-frame">
+              <img
+                src="./screenshot-meet.png"
+                alt="O Auris transcrevendo por cima de uma reunião do Google Meet, sem aparecer como participante."
+                width="1360"
+                height="817"
+                loading="lazy"
+              />
+            </div>
+            <figcaption>
+              Numa reunião de verdade. Repare que ele não aparece na lista de
+              participantes — ele ouve o áudio do computador, não a chamada.
+            </figcaption>
           </figure>
         </div>
       </section>
@@ -247,17 +265,15 @@
           <h2>O que acontece com o áudio.</h2>
           <ul class="privacy">
             <li>
-              <strong>O áudio não é gravado.</strong> Ele é enviado a um
-              provedor externo para virar texto e descartado em seguida. Nenhum
-              arquivo de áudio fica na sua máquina nem em servidor nosso.
-              <span class="flag">[VERIFICAR JURÍDICO]</span>
+              <strong>O Auris não grava áudio.</strong> O som da reunião é
+              enviado a um provedor externo para virar texto, e nenhum arquivo
+              de áudio é guardado — nem na sua máquina, nem em servidor nosso.
             </li>
             <li>
               <strong>O texto passa por esse mesmo provedor.</strong> Quando o
               registro é gerado, quando uma fala é traduzida e quando o vendedor
               pergunta algo durante a call, o trecho da transcrição é enviado
-              para lá. Ele não fica armazenado no provedor.
-              <span class="flag">[VERIFICAR JURÍDICO]</span>
+              para lá.
             </li>
             <li>
               <strong>As transcrições e os registros ficam no computador do
@@ -285,21 +301,21 @@
       <section class="band reveal" id="preco">
         <div class="wrap">
           <span class="eyebrow">Preço</span>
-          <h2>Um plano, por vendedor.</h2>
+          <h2>Grátis durante o beta.</h2>
           <div class="price-card">
             <p class="price">
-              <span class="price-currency">R$</span>
-              <span class="price-value" data-price>129</span>
-              <span class="price-unit">por vendedor / mês</span>
+              <span class="price-free">Grátis</span>
+              <span class="price-unit">enquanto está em beta</span>
             </p>
-            <p class="body">Teste de 14 dias. Sem plano grátis.</p>
-            <a class="cta-primary" href="#contato-link" data-contact-link>
-              Falar sobre o teste
+            <p class="body">
+              Use com o time inteiro, sem cartão. O preço por vendedor entra
+              depois do beta, e quem estiver usando vai saber antes de qualquer
+              cobrança.
+            </p>
+            <a class="cta-primary" href="#download-link">
+              <span data-download-label>Baixar</span>
             </a>
-            <p class="cta-note">
-              A cobrança ainda não está automatizada — o teste é combinado por
-              e-mail.
-            </p>
+            <p class="cta-note" data-download-note></p>
           </div>
         </div>
       </section>
@@ -342,10 +358,9 @@
             <details>
               <summary>O áudio da reunião fica gravado?</summary>
               <p>
-                Não. O áudio vira texto e é descartado; nenhum arquivo de som é
-                guardado. O texto fica no computador do vendedor, e passa pelo
-                provedor de transcrição em trânsito.
-                <span class="flag">[VERIFICAR JURÍDICO]</span>
+                O Auris não guarda áudio. O som é enviado para transcrição e o
+                que fica é o texto, no computador do vendedor. Em trânsito, ele
+                passa pelo provedor de transcrição.
               </p>
             </details>
             <details>
@@ -365,9 +380,9 @@
             <details>
               <summary>O cliente precisa saber que a reunião está sendo transcrita?</summary>
               <p>
-                Avisar é a prática que recomendamos, e em muitos casos é
-                exigência legal. Confirme a regra que se aplica ao seu negócio
-                antes de usar. <span class="flag">[VERIFICAR JURÍDICO]</span>
+                Recomendamos avisar. As regras variam conforme o tipo de
+                reunião e o contexto, então confirme o que se aplica ao seu
+                caso antes de usar.
               </p>
             </details>
           </div>
@@ -395,7 +410,6 @@
       <div class="footer-links">
         <a href="#contato-link" data-contact-link>contato</a>
         <a href="#privacidade">privacidade</a>
-        <a href="#">termos</a>
         <a href="./changelog.html">changelog</a>
         <a href="#baixar">download</a>
       </div>

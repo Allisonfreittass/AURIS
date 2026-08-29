@@ -319,6 +319,26 @@ p {
   margin: 56px 0 0;
   max-width: 900px;
 }
+/* The overlay is small on purpose — showing it stretched to the column
+ * width would misrepresent how much screen it actually takes. */
+/* Shown at its real pixel size: scaling it up would misrepresent how much
+ * screen the collapsed window actually takes. */
+.shot-pill {
+  max-width: 420px;
+  margin: 32px 0;
+}
+/* Widest image on the page, and deliberately so. It came from a 1360px
+ * capture; boxing it at the reading measure meant scaling to 0.66 on top of
+ * an already-reduced file, and two downscales in a row turn the overlay text
+ * into mush. Letting it use the full container keeps it near its native
+ * pixels. */
+.shot-meet {
+  max-width: 1120px;
+  margin: 32px 0 0;
+}
+.shot-overlay {
+  max-width: 520px;
+}
 .shot-inline {
   margin-top: 36px;
   max-width: 600px;
@@ -478,6 +498,12 @@ p {
 .price-currency {
   font-size: 20px;
   color: var(--text-secondary);
+}
+.price-free {
+  font-size: 36px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
 .price-value {
   font-size: 44px;

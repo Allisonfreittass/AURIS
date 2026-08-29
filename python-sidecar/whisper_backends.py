@@ -175,11 +175,13 @@ class RemoteBackend(WhisperBackend):
                 f"proxy rejected token (401) at {self.endpoint} :: {detail}"
             )
         if resp.status_code == 429:
-            # Rate-limited — surface a short, recognizable message so the
-            # main process can route it to a friendly banner instead of
-            # dumping the raw Groq JSON. The worker just skips this chunk;
-            # the next partial / final retries naturally.
-            raise RuntimeError("rate_limit: whisper")
+            # Rate-limited. Two different ceilings answer with 429 — the Auris
+            # proxy's own per-plan daily counter and Groq's limits — and they
+            # are fixed in completely different places. The body says which,
+            # so carry it: without it the log reads the same either way and
+            # the first hour of debugging goes to the wrong system.
+            detail = (resp.text or "").strip()[:200] or "(corpo vazio)"
+            raise RuntimeError(f"rate_limit: whisper :: {detail}")
         if resp.status_code >= 400:
             snippet = resp.text[:300] if resp.text else "(empty body)"
             raise RuntimeError(f"proxy returned {resp.status_code} from {self.endpoint} :: {snippet}")
