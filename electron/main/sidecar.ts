@@ -133,6 +133,11 @@ export class SidecarSupervisor {
 
     const env = { ...process.env };
     delete env.ELECTRON_RUN_AS_NODE;
+    // Both pipes are decoded as UTF-8 below. Windows would otherwise hand
+    // Python the ANSI codepage for a piped stdout, mangling every accent.
+    // protocol.py pins this too; here it also covers output written before
+    // that import (e.g. an interpreter traceback).
+    env.PYTHONIOENCODING = 'utf-8';
 
     this.child = spawn(launch.cmd, launch.args, {
       shell: false,

@@ -44,12 +44,67 @@ MAX_FINAL_SECONDS = 45.0
 ENERGY_GATE_RMS = 0.010
 EMPTY_PARTIALS_TO_FORCE_FINAL = 3
 
+# Whisper emits a small set of stock phrases when handed audio with no real
+# speech in it — an artifact of the subtitle corpora it was trained on. With
+# `--language auto` (which we need, so the translation layer can see the
+# detected language) a noise-only window usually gets detected as English and
+# comes back as "Thank you.".
+#
+# These are also things people genuinely say, so matching text alone would eat
+# real speech — a client closing a call with "obrigado" is content, not noise.
+# The filter therefore only applies below HALLUCINATION_RMS_CEILING: quiet
+# enough that a confident full sentence is implausible. Above it we keep
+# whatever Whisper returned.
+HALLUCINATION_RMS_CEILING = 0.020
+
+HALLUCINATION_ARTIFACTS = frozenset({
+    "thank you",
+    "thank you very much",
+    "thanks for watching",
+    "thank you for watching",
+    "please subscribe",
+    "like and subscribe",
+    "you",
+    "bye",
+    "bye bye",
+    "obrigado",
+    "obrigada",
+    "muito obrigado",
+    "gracias",
+    "amara org",
+    "legendas pela comunidade amara org",
+    "legendado pela comunidade amara org",
+    "subtitulos por la comunidad de amara org",
+})
+
+
+def _normalize_for_artifact_match(text: str) -> str:
+    """Lowercase, drop punctuation, collapse whitespace.
+
+    Whisper varies the punctuation and casing of its artifacts run to run
+    ("Thank you." / "thank you" / "Thank you!"), so compare on a flattened
+    form. Accents are left alone — "obrigado" and "obrigada" are listed
+    separately rather than folded.
+    """
+    return " ".join(
+        "".join(ch for ch in text.lower() if ch.isalnum() or ch.isspace()).split()
+    )
+
+
+def _is_probable_hallucination(text: str, rms: float) -> bool:
+    if rms >= HALLUCINATION_RMS_CEILING:
+        return False
+    return _normalize_for_artifact_match(text) in HALLUCINATION_ARTIFACTS
+
 
 @dataclass
 class _TranscribeRequest:
     audio: np.ndarray
     is_final: bool
     on_result: Callable[[str, Optional[str]], None]
+    # Mean RMS of `audio`. Used to decide whether a stock Whisper phrase
+    # coming back is real speech or an artifact of near-silence.
+    rms: float
 
 
 class StreamingTranscriber:
@@ -175,6 +230,7 @@ class StreamingTranscriber:
         pcm = b"".join(frames)
         audio_i16 = np.frombuffer(pcm, dtype=np.int16)
         audio_f32 = audio_i16.astype(np.float32) / 32768.0
+        segment_rms = float(np.sqrt(np.mean(audio_f32 ** 2)))
 
         with self._lock:
             if not is_final and self._partial_in_flight:
@@ -183,7 +239,9 @@ class StreamingTranscriber:
                 self._partial_in_flight = True
 
         try:
-            self._req_queue.put_nowait(_TranscribeRequest(audio_f32, is_final, on_result))
+            self._req_queue.put_nowait(
+                _TranscribeRequest(audio_f32, is_final, on_result, segment_rms)
+            )
         except queue.Full:
             with self._lock:
                 if not is_final:
@@ -208,6 +266,13 @@ class StreamingTranscriber:
                 lang = result.lang
             except Exception as e:
                 log(f"backend error: {e}")
+            else:
+                if text and _is_probable_hallucination(text, req.rms):
+                    log(
+                        f"dropping probable hallucination {text!r} "
+                        f"(segment rms {req.rms:.4f} < {HALLUCINATION_RMS_CEILING})"
+                    )
+                    text = ""
             finally:
                 if not req.is_final:
                     with self._lock:
